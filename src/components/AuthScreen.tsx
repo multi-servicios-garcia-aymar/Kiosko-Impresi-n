@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Lock, Mail, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Loader2, AlertCircle, Eye, EyeOff, MailCheck, ArrowLeft } from 'lucide-react';
 
 export const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,6 +10,7 @@ export const AuthScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,21 +32,64 @@ export const AuthScreen: React.FC = () => {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        // Show success message for registration
-        alert('Registro exitoso. Si el sistema requiere confirmación, por favor revisa tu correo electrónico.');
+        
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error('Este correo electrónico ya está en uso. Por favor, inicia sesión.');
+        }
+
+        setShowSuccessScreen(true);
       }
     } catch (err: any) {
       console.error('Auth error:', err);
-      setError(err.message || 'Error en la autenticación');
+      let errorMsg = err.message || 'Error en la autenticación';
+      
+      if (errorMsg.toLowerCase().includes('email not confirmed')) {
+        errorMsg = 'Debes verificar tu bandeja de correo antes de iniciar sesión.';
+      } else if (errorMsg.toLowerCase().includes('invalid login credentials')) {
+        errorMsg = 'Correo o contraseña incorrectos.';
+      } else if (errorMsg.toLowerCase().includes('user already registered')) {
+        errorMsg = 'Este correo electrónico ya está registrado. Por favor, inicia sesión.';
+      }
+      
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (showSuccessScreen) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-100">
+          <div className="mx-auto w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-6">
+            <MailCheck className="w-8 h-8 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Revisa tu correo</h2>
+          <p className="text-slate-500 mb-6 font-medium">
+            Hemos enviado un enlace de confirmación a <span className="text-slate-800 font-bold">{email}</span>.
+            Por favor, revisa tu bandeja de entrada o la carpeta de correo no deseado (SPAM) para activar tu cuenta.
+          </p>
+          <button
+            onClick={() => {
+              setShowSuccessScreen(false);
+              setIsLogin(true);
+              setPassword('');
+              setConfirmPassword('');
+            }}
+            className="w-full flex justify-center items-center gap-2 bg-slate-50 text-slate-700 rounded-xl py-3.5 px-4 font-bold hover:bg-slate-100 transition-colors border border-slate-200"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Volver al inicio de sesión
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
