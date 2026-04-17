@@ -1,0 +1,2 @@
+import fs from 'fs';
+fs.writeFileSync('src-tauri/icons/icon.ico', Buffer.from('AAABAAEAAQEAAAEAIAAwAAAAFgAAACgAAAABAAAAAgAAAAEAIAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//8AAAAAAAD//wAA', 'base64'));

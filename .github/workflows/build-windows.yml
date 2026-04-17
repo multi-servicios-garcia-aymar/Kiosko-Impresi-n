@@ -1,0 +1,48 @@
+name: "Generar Instalador Windows (.exe)"
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust (Stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Instalar dependencias web
+        run: npm install
+
+      # En Windows Cloud a veces es necesario forzar la corrección del icono corrupto
+      # para asegurar que no se atasque el RC.exe de Microsoft.
+      - name: Inyectar ícono compilable
+        run: |
+          node -e "const fs = require('fs'); fs.writeFileSync('src-tauri/icons/icon.ico', Buffer.from('AAABAAEAAQEAAAEAIAAwAAAAFgAAACgAAAABAAAAAgAAAAEAIAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//8AAAAAAAD//wAA', 'base64'));"
+
+      - name: Compilar App y Generar .exe (Tauri)
+        uses: tauri-apps/tauri-action@v0
+        env:
+           # Este token es provisto automáticamente por GitHub
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'Kiosko de Fotos v__VERSION__'
+          releaseBody: 'Instalador oficial para Windows (.exe) generado automáticamente.'
+          releaseDraft: false
+          prerelease: false
+          # Usamos npm run build en lugar del default de vite para asegurar el empaquetado
+          buildRunner: npm run build
