@@ -1,20 +1,17 @@
 {
-  "short_name": "KioskHub",
-  "name": "Enterprise Kiosk Hub",
+  "short_name": "Kiosko Fotos",
+  "name": "Centro de Impresión Fotográfica",
+  "description": "Configura, diseña e imprime tus fotos para documentos, pasaportes y postales con precisión milimétrica.",
   "icons": [
     {
-      "src": "https://picsum.photos/192/192",
+      "src": "/logo.png",
       "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "https://picsum.photos/512/512",
-      "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",
   "background_color": "#ffffff",
   "display": "standalone",
-  "theme_color": "#000000"
+  "theme_color": "#4f46e5"
 }
