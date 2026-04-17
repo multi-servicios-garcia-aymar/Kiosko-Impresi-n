@@ -2,7 +2,6 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
-import obfuscator from 'vite-plugin-javascript-obfuscator';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
@@ -11,43 +10,6 @@ export default defineConfig(({mode}) => {
     plugins: [
       react(), 
       tailwindcss(),
-      mode === 'production' ? obfuscator({
-        include: ['src/**/*.{ts,tsx,js,jsx}'],
-        exclude: [/node_modules/, /licenseService\.ts/],
-        apply: 'build',
-        debugger: false,
-        options: {
-          compact: true,
-          controlFlowFlattening: true,
-          controlFlowFlatteningThreshold: 1.0,
-          deadCodeInjection: true,
-          deadCodeInjectionThreshold: 0.4,
-          debugProtection: true,
-          debugProtectionInterval: 4000,
-          disableConsoleOutput: true,
-          identifierNamesGenerator: 'hexadecimal',
-          log: false,
-          numbersToExpressions: true,
-          renameGlobals: false,
-          selfDefending: true,
-          simplify: true,
-          splitStrings: true,
-          splitStringsChunkLength: 5,
-          stringArray: true,
-          stringArrayCallsTransform: true,
-          stringArrayCallsTransformThreshold: 1.0,
-          stringArrayEncoding: ['base64', 'rc4'],
-          stringArrayIndexShift: true,
-          stringArrayRotate: true,
-          stringArrayShuffle: true,
-          stringArrayWrappersCount: 5,
-          stringArrayWrappersChainedCalls: true,
-          stringArrayWrappersParametersMaxCount: 5,
-          stringArrayWrappersType: 'function',
-          stringArrayThreshold: 1.0,
-          unicodeEscapeSequence: true
-        }
-      }) : undefined
     ],
     clearScreen: false,
     envPrefix: ['VITE_', 'TAURI_'],
@@ -62,8 +24,6 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
     },
   };
