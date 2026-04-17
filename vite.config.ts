@@ -7,7 +7,7 @@ import obfuscator from 'vite-plugin-javascript-obfuscator';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: './',
+    base: '/',
     plugins: [
       react(), 
       tailwindcss(),
