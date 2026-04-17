@@ -4,7 +4,7 @@
   "description": "Configura, diseña e imprime tus fotos para documentos, pasaportes y postales con precisión milimétrica.",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
