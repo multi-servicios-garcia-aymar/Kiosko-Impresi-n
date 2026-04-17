@@ -6,6 +6,7 @@ import { ActivationScreen } from '../ActivationScreen';
 import { useLicense } from '../../context/LicenseContext';
 import { LicenseService } from '../../services/licenseService';
 import { useAuthStore } from '../../store/useAuthStore';
+import { Logo } from '../ui/Logo';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -56,9 +57,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             className="flex items-center gap-3 cursor-pointer" 
             onClick={() => navigate('/')}
           >
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md shadow-indigo-100 shrink-0 overflow-hidden border border-slate-100">
-              <img src="/logo.png" alt="Kiosko Fotos Logo" className="w-full h-full object-cover" />
-            </div>
+            <Logo size="md" className="bg-white rounded-xl shadow-md border border-slate-100 p-1" />
             <div className="flex flex-col justify-center hidden sm:flex">
               <span className="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 leading-tight">
                 Kiosko de Impresión

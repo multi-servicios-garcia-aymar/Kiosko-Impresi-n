@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { KeyRound, ShieldCheck, AlertCircle, Loader2, Printer, Mail, MessageCircle } from 'lucide-react';
 import { LicenseService } from '../services/licenseService';
+import { Logo } from './ui/Logo';
 
 interface ActivationScreenProps {
   onActivated: () => void;
@@ -64,9 +65,7 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ onActivated,
         )}
         <div className={`overflow-y-auto custom-scrollbar ${onClose ? "p-8 pt-4" : "p-8"}`}>
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
-              <ShieldCheck className="w-8 h-8" />
-            </div>
+            <Logo size="lg" />
           </div>
           
           <h2 className="text-2xl font-bold text-center text-slate-900 mb-2">

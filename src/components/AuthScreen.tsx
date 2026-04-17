@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Lock, Mail, Loader2, AlertCircle, Eye, EyeOff, MailCheck, ArrowLeft } from 'lucide-react';
+import { Logo } from './ui/Logo';
 
 export const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -96,8 +97,8 @@ export const AuthScreen: React.FC = () => {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
         <div className="p-8">
           <div className="text-center mb-8">
-            <div className="mx-auto w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mb-4">
-              <Lock className="w-8 h-8 text-indigo-600" />
+            <div className="mx-auto mb-6 flex justify-center">
+              <Logo size="lg" />
             </div>
             <h2 className="text-2xl font-bold text-slate-800">
               {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
