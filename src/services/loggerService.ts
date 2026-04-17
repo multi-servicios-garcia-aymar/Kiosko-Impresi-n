@@ -15,11 +15,7 @@ class LoggerService {
   private static instance: LoggerService;
   private logs: LogEntry[] = [];
   private readonly MAX_LOGS = 1000;
-  private isTauriEnv = false;
-
-  private constructor() {
-    this.isTauriEnv = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-  }
+  private constructor() {}
 
   public static getInstance(): LoggerService {
     if (!LoggerService.instance) {
@@ -87,38 +83,20 @@ class LoggerService {
     }
 
     if (level === LogLevel.ERROR) {
-      await this.persistCrashToDisk(entry);
+      this.persistCrashToLocal(entry);
     }
   }
 
-  private async persistCrashToDisk(entry: LogEntry) {
-    if (!this.isTauriEnv) return;
+  private persistCrashToLocal(entry: LogEntry) {
     try {
-      const { writeTextFile, mkdir, exists, BaseDirectory } = await import('@tauri-apps/plugin-fs');
-      
-      const logsDirExists = await exists('logs', { baseDir: BaseDirectory.AppData });
-      if (!logsDirExists) {
-        await mkdir('logs', { baseDir: BaseDirectory.AppData });
-      }
-
       const dateStr = new Date().toISOString().split('T')[0];
-      const logFileName = `logs/crash-${dateStr}.log`;
-      
+      const logFileName = `crash-${dateStr}`;
       const logContent = `\n[${entry.timestamp}] ${entry.message}\nContext: ${JSON.stringify(entry.context, null, 2)}\n---`;
       
-      const fileExists = await exists(logFileName, { baseDir: BaseDirectory.AppData });
-      
-      if (fileExists) {
-        // En Tauri plugin-fs v2, writeTextFile sobrescribe, no hace append directamente,
-        // pero podemos leer y concatenar para evitar perder crasheos previos del mismo día
-        const { readTextFile } = await import('@tauri-apps/plugin-fs');
-        const prevContent = await readTextFile(logFileName, { baseDir: BaseDirectory.AppData });
-        await writeTextFile(logFileName, prevContent + logContent, { baseDir: BaseDirectory.AppData });
-      } else {
-        await writeTextFile(logFileName, logContent, { baseDir: BaseDirectory.AppData });
-      }
+      const prevContent = localStorage.getItem(logFileName) || '';
+      localStorage.setItem(logFileName, prevContent + logContent);
     } catch (e) {
-      console.error("Failed to persist crash report to disk:", e);
+      console.error("Failed to persist crash report to local storage:", e);
     }
   }
 

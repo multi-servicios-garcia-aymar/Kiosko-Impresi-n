@@ -1,4 +1,3 @@
-import { invoke } from '@tauri-apps/api/core';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from './loggerService';
 
@@ -26,23 +25,19 @@ export interface LicenseData {
 
 export class LicenseService {
   private static STORAGE_KEY = 'nexo_kiosk_license';
+  private static MACHINE_ID_KEY = 'nexo_kiosk_machine_id';
+  private static TRIAL_START_KEY = 'nexo_kiosk_trial_start';
 
   /**
-   * Retrieves the unique hardware ID of the current machine using Rust
+   * Retrieves the unique hardware ID of the current machine (Web Fallback)
    */
   static async getMachineId(): Promise<string> {
-    try {
-      // Verificación de entorno Tauri
-      if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-        return await invoke<string>('get_machine_id');
-      }
-      
-      // Identificador de respaldo para el entorno de desarrollo/diseño
-      return 'ID-ENTORNO-DESARROLLO';
-    } catch (error) {
-      logger.error('Failed to get machine ID:', error);
-      throw new Error('No se pudo obtener el identificador del equipo.');
+    let machineId = localStorage.getItem(this.MACHINE_ID_KEY);
+    if (!machineId) {
+      machineId = 'WEB-ID-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem(this.MACHINE_ID_KEY, machineId);
     }
+    return machineId;
   }
 
   /**
@@ -230,18 +225,16 @@ export class LicenseService {
   }
 
   /**
-   * Retrieves the trial start date from Rust backend
+   * Retrieves the trial start date (Web Fallback)
    */
   static async getTrialStartDate(): Promise<Date> {
     try {
-      // Verificación de entorno Tauri
-      if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-        const dateStr = await invoke<string>('get_trial_data');
-        return new Date(dateStr);
+      let dateStr = localStorage.getItem(this.TRIAL_START_KEY);
+      if (!dateStr) {
+        dateStr = new Date().toISOString();
+        localStorage.setItem(this.TRIAL_START_KEY, dateStr);
       }
-
-      // Fecha de inicio para entorno de desarrollo (hoy)
-      return new Date();
+      return new Date(dateStr);
     } catch (error) {
       logger.error('Failed to get trial date:', error);
       return new Date(); // Fallback to now
