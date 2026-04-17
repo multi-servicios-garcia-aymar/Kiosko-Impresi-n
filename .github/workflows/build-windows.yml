@@ -38,5 +38,3 @@ jobs:
           releaseBody: 'Instalador oficial para Windows (.exe) generado automáticamente.'
           releaseDraft: false
           prerelease: false
-          # Usamos npm run build en lugar del default de vite para asegurar el empaquetado
-          buildRunner: npm run build

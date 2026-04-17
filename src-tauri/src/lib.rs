@@ -31,18 +31,21 @@ fn get_trial_data(app: tauri::AppHandle) -> Result<String, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  tauri::Builder::default()
+  let mut builder = tauri::Builder::default();
+  
+  #[cfg(debug_assertions)]
+  {
+    builder = builder.plugin(
+      tauri_plugin_log::Builder::default()
+        .level(log::LevelFilter::Info)
+        .build(),
+    );
+  }
+
+  builder
+    .plugin(tauri_plugin_fs::init())
     .invoke_handler(tauri::generate_handler![get_machine_id, get_trial_data])
     .setup(|app| {
-      #[cfg(debug_assertions)]
-      {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
-      app.handle().plugin(tauri_plugin_fs::init())?;
       Ok(())
     })
     .run(tauri::generate_context!())

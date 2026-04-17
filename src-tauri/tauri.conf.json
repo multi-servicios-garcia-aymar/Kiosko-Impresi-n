@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Kiosko de Impresion",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "ec.network.nexo.kiosko",
   "build": {
     "frontendDist": "../dist",
