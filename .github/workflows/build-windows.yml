@@ -27,12 +27,6 @@ jobs:
       - name: Instalar dependencias web
         run: npm install
 
-      # En Windows Cloud a veces es necesario forzar la corrección del icono corrupto
-      # para asegurar que no se atasque el RC.exe de Microsoft.
-      - name: Inyectar ícono compilable
-        run: |
-          node -e "const fs = require('fs'); fs.writeFileSync('src-tauri/icons/icon.ico', Buffer.from('AAABAAEAAQEAAAEAIAAwAAAAFgAAACgAAAABAAAAAgAAAAEAIAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//8AAAAAAAD//wAA', 'base64'));"
-
       - name: Compilar App y Generar .exe (Tauri)
         uses: tauri-apps/tauri-action@v0
         env:
