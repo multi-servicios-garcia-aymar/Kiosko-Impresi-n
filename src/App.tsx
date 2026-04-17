@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthGuard } from './components/AuthGuard';
 import { LicenseGuard } from './components/LicenseGuard';
 import { LicenseProvider } from './context/LicenseContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -23,20 +24,22 @@ const PageLoader = () => (
 export default function App() {
   return (
     <ErrorBoundary>
-      <LicenseProvider>
-        <LicenseGuard>
-          <Router>
-            <MainLayout>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/photo-print/:templateId" element={<PhotoPrintCreator />} />
-                </Routes>
-              </Suspense>
-            </MainLayout>
-          </Router>
-        </LicenseGuard>
-      </LicenseProvider>
+      <AuthGuard>
+        <LicenseProvider>
+          <LicenseGuard>
+            <Router>
+              <MainLayout>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/photo-print/:templateId" element={<PhotoPrintCreator />} />
+                  </Routes>
+                </Suspense>
+              </MainLayout>
+            </Router>
+          </LicenseGuard>
+        </LicenseProvider>
+      </AuthGuard>
     </ErrorBoundary>
   );
 }

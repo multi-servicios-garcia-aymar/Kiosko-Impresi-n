@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, Settings, HelpCircle, User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound } from 'lucide-react';
+import { LayoutGrid, Settings, HelpCircle, User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ActivationScreen } from '../ActivationScreen';
 import { useLicense } from '../../context/LicenseContext';
 import { LicenseService } from '../../services/licenseService';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { license, trialStatus, refreshLicense } = useLicense();
+  const { user, signOut } = useAuthStore();
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [machineId, setMachineId] = useState<string>('');
   const [showActivation, setShowActivation] = useState(false);
@@ -98,14 +100,27 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                             <User className="w-6 h-6 text-slate-400" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Administrador</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cuenta Actual</span>
                             <span className="text-sm font-semibold text-slate-900 truncate max-w-[140px]">
-                              {license ? license.clientName : (trialStatus?.isTrialActive ? 'Usuario de Prueba' : 'Invitado')}
+                              {user?.email || 'Usuario de Autenticación'}
                             </span>
                           </div>
                         </div>
 
                         <div className="space-y-3">
+                          <button 
+                            onClick={async () => {
+                              await signOut();
+                            }}
+                            className="w-full flex items-center gap-3 p-3 bg-rose-50 text-rose-700 rounded-xl hover:bg-rose-100 transition-colors border border-rose-100"
+                          >
+                            <LogOut className="w-5 h-5" />
+                            <div className="flex flex-col items-start">
+                              <span className="text-sm font-bold">Cerrar Sesión</span>
+                              <span className="text-[10px] opacity-70">Desconectar perfil de la nube</span>
+                            </div>
+                          </button>
+
                           {!license && (
                             <button 
                               onClick={() => {

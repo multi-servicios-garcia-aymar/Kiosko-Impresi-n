@@ -1,19 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { logger } from './loggerService';
-
-// Lazy initialize Supabase client
-let supabaseInstance: any = null;
-const getSupabase = () => {
-  if (!supabaseInstance) {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) {
-      logger.error('CRITICAL: Supabase credentials missing. License validation will fail.');
-    }
-    supabaseInstance = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseKey || 'placeholder');
-  }
-  return supabaseInstance;
-};
 
 export interface LicenseData {
   key: string;
@@ -89,7 +75,7 @@ export class LicenseService {
       const currentHardwareId = await this.getMachineId();
 
       // 1. Consulta Inicial (Fetch)
-      const { data, error } = await getSupabase()
+      const { data, error } = await supabase
         .from('licenses')
         .select('*')
         .eq('key', key)
@@ -124,7 +110,7 @@ export class LicenseService {
         const expiresAtISO = expiresAtDate.toISOString();
 
         // Actualizar Servidor: Vincular PC y establecer fecha
-        const { error: updateError } = await getSupabase()
+        const { error: updateError } = await supabase
           .from('licenses')
           .update({ 
             hardware_id: currentHardwareId,
@@ -181,7 +167,7 @@ export class LicenseService {
    */
   private static async silentOnlineCheck(key: string, hardwareId: string) {
     try {
-      const { data, error } = await getSupabase()
+      const { data, error } = await supabase
         .from('licenses')
         .select('is_active, expires_at, hardware_id, client_name')
         .eq('key', key)
