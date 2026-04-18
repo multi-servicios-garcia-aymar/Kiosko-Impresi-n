@@ -114,17 +114,17 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh]">
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[100dvh] md:max-h-[95vh]">
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
           <h3 className="font-bold text-slate-800">Editor de Foto de Perfil</h3>
           <button onClick={onCancel} className="text-slate-500 hover:text-slate-700 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+        <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-y-auto lg:overflow-hidden">
           {/* Cropper Area */}
-          <div className="relative flex-1 bg-slate-900 min-h-[300px] lg:min-h-[400px]">
+          <div className="relative w-full h-[45vh] lg:flex-1 lg:h-auto bg-slate-900 shrink-0">
             {currentImage && (
               <Cropper
                 image={currentImage}
@@ -166,7 +166,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
           </div>
 
           {/* Controls */}
-          <div className="w-full lg:w-80 p-6 bg-white overflow-y-auto border-l border-slate-200">
+          <div className="w-full lg:w-80 p-6 bg-white shrink-0 lg:shrink lg:overflow-y-auto border-t lg:border-t-0 lg:border-l border-slate-200">
             <div className="space-y-6">
               {/* Zoom Control */}
               <div>

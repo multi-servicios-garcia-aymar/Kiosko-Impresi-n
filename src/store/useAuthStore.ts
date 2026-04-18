@@ -16,47 +16,55 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   initializeAuth: async () => {
     try {
-      // Check active session robustly
+      // 1. Initial robust fetch
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
-        console.error("Session fetch error:", error);
-        // Script Purificador: Destrucción física de tokens corruptos en el navegador del cliente
-        if (error.message.includes('Refresh Token Not Found') || error.status === 400 || error.status === 401) {
-          try {
-            await supabase.auth.signOut();
-          } catch (e) {
-            // Ignore signout errors if session is already dead
-          }
-          
-          // Barrido agresivo de la caché del navegador para claves de Supabase
-          Object.keys(window.localStorage).forEach(key => {
-            if (key.startsWith('sb-') || key.includes('auth-session')) {
-              window.localStorage.removeItem(key);
-            }
-          });
+        // If the error is a 'Refresh Token Not Found', it means the session is dead.
+        if (error.message.includes('Refresh Token') || error.status === 400 || error.status === 401) {
+          console.warn("Cleared dead active session");
+          // Safely remove the invalid session from localStorage
+          window.localStorage.removeItem('kiosko-auth-session');
+          set({ session: null, user: null, isLoading: false });
+          return;
         }
+        
+        console.error("Session fetch error:", error);
         set({ session: null, user: null, isLoading: false });
         return;
       }
 
       set({ session, user: session?.user ?? null, isLoading: false });
 
-      // Listen for auth changes
-      supabase.auth.onAuthStateChange((event, session) => {
+      // 2. Listen for auth changes
+      supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
           set({ session, user: session?.user ?? null });
         } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+          window.localStorage.removeItem('kiosko-auth-session');
           set({ session: null, user: null });
+        } else if (event === 'INITIAL_SESSION') {
+           // Provide fallback if still struggling with invalid token
+           if (!session) {
+             set({ session: null, user: null });
+           }
         }
       });
+      
     } catch (err) {
       console.error("Critical auth initialization error:", err);
+      window.localStorage.removeItem('kiosko-auth-session');
       set({ session: null, user: null, isLoading: false });
     }
   },
   signOut: async () => {
-    await supabase.auth.signOut();
-    set({ user: null, session: null });
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      // ignore
+    } finally {
+      window.localStorage.removeItem('kiosko-auth-session');
+      set({ user: null, session: null });
+    }
   },
 }));
