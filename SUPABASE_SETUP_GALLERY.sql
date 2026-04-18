@@ -26,6 +26,9 @@ create table public.kiosk_gallery_photos (
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Turn on REPLICA IDENTITY FULL so deletes transmit the entire row data to web clients
+ALTER TABLE public.kiosk_gallery_photos REPLICA IDENTITY FULL;
+
 -- 3. Turn on Realtime for the table (Idempotent)
 DO $$
 BEGIN

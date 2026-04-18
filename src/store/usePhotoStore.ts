@@ -159,10 +159,48 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             table: 'kiosk_gallery_photos',
             filter: `machine_id=eq.${machineId}`
           },
-          (payload) => {
-            console.log('Realtime sync payload received:', payload);
-            // Re-fetch the gallery from the cloud exactly as it is to sync up
-            get().loadGalleryPhotos();
+          async (payload) => {
+            console.log('🔥 LLEGÓ FOTO MAGICA (Realtime sync):', payload);
+            
+            const currentGallery = get().galleryPhotos;
+
+            if (payload.eventType === 'INSERT') {
+               const newRow = payload.new;
+               // Avoid blindly trusting we don't naturally have it if we generated it
+               const alreadyExists = currentGallery.some(p => p.id === newRow.id);
+               
+               if (!alreadyExists) {
+                  const { data: { publicUrl } } = supabase.storage
+                    .from('gallery')
+                    .getPublicUrl(newRow.storage_path);
+                    
+                  const incomingPhoto: GalleryPhoto = {
+                    id: newRow.id,
+                    timestamp: new Date(newRow.created_at).getTime(),
+                    url: publicUrl,
+                    cloudPath: newRow.storage_path
+                  };
+                  
+                  // Inject directly into UI
+                  set({ 
+                     galleryPhotos: [incomingPhoto, ...currentGallery].sort((a, b) => b.timestamp - a.timestamp) 
+                  });
+               }
+            } 
+            else if (payload.eventType === 'DELETE') {
+               const oldRow = payload.old;
+               // Because we use REPLICA IDENTITY FULL, we get the whole row in payload.old
+               // If not, we might only get id. So we rely on id.
+               if (oldRow && oldRow.id) {
+                  set((state) => ({
+                    galleryPhotos: state.galleryPhotos.filter(p => p.id !== oldRow.id),
+                    photos: state.photos.filter(p => p.id !== oldRow.id) // Purge from current canvas
+                  }));
+               }
+            }
+            
+            // Note: We don't call loadGalleryPhotos() anymore because it causes heavy reads
+            // and purges crops. We just patched the state directly.
           }
         )
         .subscribe();
