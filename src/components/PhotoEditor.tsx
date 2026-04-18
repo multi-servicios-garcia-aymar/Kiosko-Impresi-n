@@ -174,7 +174,14 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                   Zoom / Encuadre
                 </label>
                 <div className="flex items-center gap-3">
-                  <ZoomOut className="w-4 h-4 text-slate-400" />
+                  <button 
+                    onClick={() => setZoom(prev => Math.max(1, prev - 0.1))}
+                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    title="Alejar"
+                    aria-label="Alejar foto"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
                   <input
                     type="range"
                     value={zoom}
@@ -185,7 +192,14 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                     onChange={(e) => setZoom(Number(e.target.value))}
                     className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                   />
-                  <ZoomIn className="w-4 h-4 text-slate-400" />
+                  <button 
+                    onClick={() => setZoom(prev => Math.min(3, prev + 0.1))}
+                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    title="Acercar"
+                    aria-label="Acercar foto"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-2 text-center">
                   Arrastra la imagen para centrarla
