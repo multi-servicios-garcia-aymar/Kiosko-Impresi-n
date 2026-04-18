@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, Settings, HelpCircle, User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut } from 'lucide-react';
+import { LayoutGrid, Settings, HelpCircle, User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ActivationScreen } from '../ActivationScreen';
+import { DeviceSyncModal } from '../DeviceSyncModal';
 import { useLicense } from '../../context/LicenseContext';
 import { LicenseService } from '../../services/licenseService';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -15,6 +16,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [machineId, setMachineId] = useState<string>('');
   const [showActivation, setShowActivation] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
   const adminRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,6 +50,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             }} 
             onClose={() => setShowActivation(false)} 
           />
+        )}
+        {showSyncModal && (
+          <DeviceSyncModal onClose={() => setShowSyncModal(false)} />
         )}
       </AnimatePresence>
       {/* Navigation Bar */}
@@ -119,6 +124,22 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                               <span className="text-[10px] opacity-70">Desconectar perfil de la nube</span>
                             </div>
                           </button>
+
+                          {license && (
+                            <button 
+                              onClick={() => {
+                                setIsAdminOpen(false);
+                                setShowSyncModal(true);
+                              }}
+                              className="w-full flex items-center gap-3 p-3 bg-indigo-50 text-indigo-700 rounded-xl hover:bg-indigo-100 transition-colors border border-indigo-100"
+                            >
+                              <Smartphone className="w-5 h-5" />
+                              <div className="flex flex-col items-start">
+                                <span className="text-sm font-bold">Vincular otro dispositivo</span>
+                                <span className="text-[10px] opacity-70">Sincroniza sin claves</span>
+                              </div>
+                            </button>
+                          )}
 
                           {!license && (
                             <button 
