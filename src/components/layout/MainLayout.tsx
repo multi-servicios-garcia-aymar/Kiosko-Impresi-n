@@ -7,12 +7,14 @@ import { DeviceSyncModal } from '../DeviceSyncModal';
 import { useLicense } from '../../context/LicenseContext';
 import { LicenseService } from '../../services/licenseService';
 import { useAuthStore } from '../../store/useAuthStore';
+import { usePhotoStore } from '../../store/usePhotoStore';
 import { Logo } from '../ui/Logo';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { license, trialStatus, refreshLicense } = useLicense();
   const { user, signOut } = useAuthStore();
+  const { initializeCloudSync } = usePhotoStore();
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [machineId, setMachineId] = useState<string>('');
   const [showActivation, setShowActivation] = useState(false);
@@ -22,6 +24,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     LicenseService.getMachineId().then(setMachineId).catch(() => setMachineId('Error'));
   }, []);
+  
+  useEffect(() => {
+    if (user) {
+      initializeCloudSync();
+    }
+  }, [user, initializeCloudSync]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

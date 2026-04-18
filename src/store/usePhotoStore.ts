@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { PhotoTemplate, PhotoData, DEFAULT_TEMPLATES } from '../types/photo';
 import { GalleryPhoto, getSavedPhotos, savePhotoToGallery, deleteSavedPhoto } from '../lib/storage';
+import { supabase } from '../lib/supabase';
 
 interface PhotoStore {
   templates: PhotoTemplate[];
@@ -8,6 +9,7 @@ interface PhotoStore {
   photos: PhotoData[];
   galleryPhotos: GalleryPhoto[];
   editingImageUrl: string | null;
+  cloudSyncInitialized: boolean;
   
   setTemplates: (templates: PhotoTemplate[]) => void;
   setSelectedTemplate: (template: PhotoTemplate) => void;
@@ -19,7 +21,8 @@ interface PhotoStore {
   savePhotosForTemplate: (templateId: string) => void;
   loadGalleryPhotos: () => Promise<void>;
   addPhotoToGallery: (compressedUrl: string) => Promise<GalleryPhoto | undefined>;
-  removePhotoFromGallery: (id: string) => Promise<void>;
+  removePhotoFromGallery: (id: string, cloudPath?: string) => Promise<void>;
+  initializeCloudSync: () => void;
 }
 
 export const usePhotoStore = create<PhotoStore>((set, get) => ({
@@ -28,6 +31,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   photos: [],
   galleryPhotos: [],
   editingImageUrl: null,
+  cloudSyncInitialized: false,
 
   setTemplates: (templates) => set({ templates }),
   setSelectedTemplate: (template) => set({ selectedTemplate: template }),
@@ -100,7 +104,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
           .map(p => ({
             ...p,
             originalUrl: validPhotosMap.get(p.id)!.url,
-            croppedUrl: validPhotosMap.get(p.id)!.url // Fallback, assume cropped is original if blob died (complex crop persistence omitted for simplicity, but guarantees UI doesn't break)
+            croppedUrl: validPhotosMap.get(p.id)!.url 
           }));
         return { photos: cleanPhotos };
       });
@@ -121,9 +125,9 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     }
   },
 
-  removePhotoFromGallery: async (id) => {
+  removePhotoFromGallery: async (id, cloudPath) => {
     try {
-      await deleteSavedPhoto(id);
+      await deleteSavedPhoto(id, cloudPath);
       const updated = await getSavedPhotos();
       set((state) => ({ 
         galleryPhotos: updated,
@@ -132,5 +136,38 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     } catch (e) {
       console.error('Failed to delete photo from gallery', e);
     }
+  },
+
+  initializeCloudSync: () => {
+    const state = get();
+    if (state.cloudSyncInitialized) return;
+
+    // Listen to changes in the cloud table
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user;
+      const machineId = user?.user_metadata?.kiosk_license?.hwid;
+
+      if (!machineId) return;
+
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to INSERT and DELETE
+            schema: 'public',
+            table: 'kiosk_gallery_photos',
+            filter: `machine_id=eq.${machineId}`
+          },
+          (payload) => {
+            console.log('Realtime sync payload received:', payload);
+            // Re-fetch the gallery from the cloud exactly as it is to sync up
+            get().loadGalleryPhotos();
+          }
+        )
+        .subscribe();
+
+      set({ cloudSyncInitialized: true });
+    });
   }
 }));
