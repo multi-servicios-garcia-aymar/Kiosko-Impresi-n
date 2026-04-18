@@ -65,18 +65,25 @@ export const usePrintEngine = () => {
     };
   }, []);
 
+  const activeTemplateRef = useRef<string | null>(null);
+
   // Sync with template
   useEffect(() => {
-    if (templateId) {
+    if (templateId && activeTemplateRef.current !== templateId) {
+      activeTemplateRef.current = templateId;
+      setPhotos([]); // Clear intermediate state instantly to prevent visual artifacts
       loadPhotosForTemplate(templateId);
     }
-  }, [templateId, loadPhotosForTemplate]);
+  }, [templateId, loadPhotosForTemplate, setPhotos]);
 
   useEffect(() => {
-    if (templateId) {
-      savePhotosForTemplate(templateId);
+    // Only save if the template is fully active.
+    // We intentionally omit templateId from dependencies so it doesn't trigger a save
+    // of old photos when instantly switching module paths.
+    if (activeTemplateRef.current) {
+      savePhotosForTemplate(activeTemplateRef.current);
     }
-  }, [photos, templateId, savePhotosForTemplate]);
+  }, [photos, savePhotosForTemplate]);
 
   // Bootstrapping Custom Templates and Gallery
   useEffect(() => {
