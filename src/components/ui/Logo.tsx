@@ -1,6 +1,4 @@
 import React from 'react';
-// Import the local icon from the root using Vite's path resolution
-import localIcon from '/icon.png';
 
 interface LogoProps {
   className?: string;
@@ -18,9 +16,9 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
   return (
     <div className={`flex items-center justify-center shrink-0 overflow-hidden ${sizeClasses[size]} ${className}`}>
       <img 
-        src={localIcon}
-        alt="Logo Oficial" 
-        className="w-full h-full object-contain"
+        src="/icon.svg"
+        alt="Kiosko de Impresión Logo" 
+        className="w-full h-full object-contain drop-shadow-md"
         referrerPolicy="no-referrer"
       />
     </div>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Fondo Gradiente -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+    <linearGradient id="photoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#f8fafc" stop-opacity="1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+
+  <!-- Lente Cámara / Círculo Central Exterior -->
+  <circle cx="256" cy="230" r="100" stroke="#ffffff" stroke-width="24" stroke-opacity="0.2"/>
+  
+  <!-- Lente Interior -->
+  <circle cx="256" cy="230" r="64" fill="#ffffff" />
+  <circle cx="256" cy="230" r="28" fill="#4f46e5" />
+  <circle cx="268" cy="218" r="8" fill="#ffffff" /> <!-- Reflejo de luz -->
+
+  <!-- Fotografía Saliendo (Representando impresión) -->
+  <rect x="176" y="320" width="160" height="120" rx="12" fill="url(#photoGrad)" />
+  
+  <!-- Montaña/Sol en la fotografía minimalista -->
+  <path d="M196 410 L230 360 L250 390 L270 350 L316 410 Z" fill="#c7d2fe" />
+  <circle cx="230" cy="350" r="12" fill="#818cf8" />
+  
+  <!-- Ranura de impresión (Línea) -->
+  <line x1="150" y1="360" x2="362" y2="360" stroke="#ffffff" stroke-width="16" stroke-linecap="round" />
+</svg>
