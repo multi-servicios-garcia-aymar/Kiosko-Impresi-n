@@ -239,104 +239,98 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
               </div>
 
               {/* Background Replacement */}
-              {bgRemoved && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="space-y-4"
-                >
-                  <hr className="border-slate-100" />
-                  
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Palette className="w-3 h-3" /> Color de Fondo
-                    </label>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {bgColors.map((color) => (
-                        <button
-                          key={color}
-                          onClick={() => {
-                            setBgColor(color);
-                            setBgImg(null);
-                          }}
-                          className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                            bgColor === color && !bgImg ? 'border-indigo-600 scale-110 shadow-md' : 'border-slate-200'
-                          }`}
-                          style={{ 
-                            backgroundColor: color === 'transparent' ? '#fff' : color,
-                            backgroundImage: color === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)' : 'none',
-                            backgroundSize: color === 'transparent' ? '10px 10px' : 'auto',
-                            backgroundPosition: color === 'transparent' ? '0 0, 0 5px, 5px -5px, -5px 0px' : '0% 0%'
-                          }}
-                          title={color === 'transparent' ? 'Transparente' : color}
-                        />
-                      ))}
-                      
-                      {/* Native Color Picker Trigger */}
-                      <div className="relative">
-                        <button
-                          onClick={() => colorInputRef.current?.click()}
-                          className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-transform hover:scale-110 ${
-                            !bgColors.includes(bgColor) && bgColor !== 'transparent' && !bgImg ? 'border-indigo-600 scale-110 shadow-md' : 'border-slate-200 border-dashed'
-                          }`}
-                          style={{ backgroundColor: !bgColors.includes(bgColor) && !bgImg ? bgColor : '#fff' }}
-                          title="Elegir otro color"
-                        >
-                          {bgColors.includes(bgColor) || bgImg ? (
-                            <div className="w-full h-full rounded-full" style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }} />
-                          ) : null}
-                        </button>
-                        <input
-                          type="color"
-                          ref={colorInputRef}
-                          value={bgColor !== 'transparent' ? bgColor : '#ffffff'}
-                          onChange={(e) => {
-                            setBgColor(e.target.value);
-                            setBgImg(null);
-                          }}
-                          className="absolute opacity-0 w-0 h-0"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <ImageIcon className="w-3 h-3" /> Imagen de Fondo
-                    </label>
-                    <div className="flex gap-2">
+              <div className="space-y-4">
+                <hr className="border-slate-100" />
+                
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Palette className="w-3 h-3" /> Color de Fondo
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {bgColors.map((color) => (
                       <button
-                        onClick={() => bgInputRef.current?.click()}
-                        className={`flex-1 py-2 px-3 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-medium transition-colors ${
-                          bgImg ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-dashed border-slate-200 hover:border-indigo-300 text-slate-600'
+                        key={color}
+                        onClick={() => {
+                          setBgColor(color);
+                          setBgImg(null);
+                        }}
+                        className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
+                          bgColor === color && !bgImg ? 'border-indigo-600 scale-110 shadow-md' : 'border-slate-200'
                         }`}
+                        style={{ 
+                          backgroundColor: color === 'transparent' ? '#fff' : color,
+                          backgroundImage: color === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)' : 'none',
+                          backgroundSize: color === 'transparent' ? '10px 10px' : 'auto',
+                          backgroundPosition: color === 'transparent' ? '0 0, 0 5px, 5px -5px, -5px 0px' : '0% 0%'
+                        }}
+                        title={color === 'transparent' ? 'Transparente' : color}
+                      />
+                    ))}
+                    
+                    {/* Native Color Picker Trigger */}
+                    <div className="relative">
+                      <button
+                        onClick={() => colorInputRef.current?.click()}
+                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-transform hover:scale-110 ${
+                          !bgColors.includes(bgColor) && bgColor !== 'transparent' && !bgImg ? 'border-indigo-600 scale-110 shadow-md' : 'border-slate-200 border-dashed'
+                        }`}
+                        style={{ backgroundColor: !bgColors.includes(bgColor) && !bgImg ? bgColor : '#fff' }}
+                        title="Elegir otro color"
                       >
-                        <Upload className="w-3 h-3" />
-                        {bgImg ? 'Cambiar Imagen' : 'Subir Imagen'}
+                        {bgColors.includes(bgColor) || bgImg ? (
+                          <div className="w-full h-full rounded-full" style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }} />
+                        ) : null}
                       </button>
                       <input
-                        type="file"
-                        ref={bgInputRef}
-                        accept="image/*"
-                        onChange={handleBgImageUpload}
-                        className="hidden"
+                        type="color"
+                        ref={colorInputRef}
+                        value={bgColor !== 'transparent' ? bgColor : '#ffffff'}
+                        onChange={(e) => {
+                          setBgColor(e.target.value);
+                          setBgImg(null);
+                        }}
+                        className="absolute opacity-0 w-0 h-0"
                       />
-                      {bgImg && (
-                        <button
-                          onClick={() => {
-                            setBgImg(null);
-                            setBgColor('transparent');
-                          }}
-                          className="w-10 flex flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                          title="Eliminar imagen"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
                   </div>
-                </motion.div>
-              )}
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <ImageIcon className="w-3 h-3" /> Imagen de Fondo
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => bgInputRef.current?.click()}
+                      className={`flex-1 py-2 px-3 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-medium transition-colors ${
+                        bgImg ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-dashed border-slate-200 hover:border-indigo-300 text-slate-600'
+                      }`}
+                    >
+                      <Upload className="w-3 h-3" />
+                      {bgImg ? 'Cambiar Imagen' : 'Subir Imagen'}
+                    </button>
+                    <input
+                      type="file"
+                      ref={bgInputRef}
+                      accept="image/*"
+                      onChange={handleBgImageUpload}
+                      className="hidden"
+                    />
+                    {bgImg && (
+                      <button
+                        onClick={() => {
+                          setBgImg(null);
+                          setBgColor('transparent');
+                        }}
+                        className="w-10 flex flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                        title="Eliminar imagen"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
