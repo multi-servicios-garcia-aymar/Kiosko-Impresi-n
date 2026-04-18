@@ -44,10 +44,23 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   setEditingImageUrl: (url) => set({ editingImageUrl: url }),
 
   loadPhotosForTemplate: (templateId) => {
-    const savedPhotos = localStorage.getItem(`photo_state_${templateId}`);
-    if (savedPhotos) {
+    const savedPhotosStr = localStorage.getItem(`photo_state_${templateId}`);
+    if (savedPhotosStr) {
       try {
-        set({ photos: JSON.parse(savedPhotos) });
+        const dehydratedPhotos: PhotoData[] = JSON.parse(savedPhotosStr);
+        const state = get();
+        
+        // Hydration: Restore the heavy Base64 URLs from the gallery memory
+        const validPhotosMap = new Map(state.galleryPhotos.map(gp => [gp.id, gp]));
+        const hydratedPhotos = dehydratedPhotos
+          .filter(p => validPhotosMap.has(p.id)) // Ensure it wasn't deleted
+          .map(p => ({
+            ...p,
+            originalUrl: validPhotosMap.get(p.id)!.url,
+            croppedUrl: validPhotosMap.get(p.id)!.url // Fallback if crop was lost
+          }));
+          
+        set({ photos: hydratedPhotos });
       } catch (e) {
         console.error('Failed to parse saved photos', e);
         set({ photos: [] });
@@ -59,7 +72,18 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
   savePhotosForTemplate: (templateId) => {
     const { photos } = get();
-    localStorage.setItem(`photo_state_${templateId}`, JSON.stringify(photos));
+    // Dehydration: Strip the massive Base64 strings before saving to the 5MB localStorage limit
+    const dehydratedPhotos = photos.map(p => ({
+      ...p,
+      originalUrl: '',
+      croppedUrl: ''
+    }));
+    
+    try {
+      localStorage.setItem(`photo_state_${templateId}`, JSON.stringify(dehydratedPhotos));
+    } catch (e) {
+      console.error('Critical quota error during save', e);
+    }
   },
 
   loadGalleryPhotos: async () => {

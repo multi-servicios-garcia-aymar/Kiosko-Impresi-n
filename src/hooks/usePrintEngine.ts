@@ -65,26 +65,6 @@ export const usePrintEngine = () => {
     };
   }, []);
 
-  const activeTemplateRef = useRef<string | null>(null);
-
-  // Sync with template
-  useEffect(() => {
-    if (templateId && activeTemplateRef.current !== templateId) {
-      activeTemplateRef.current = templateId;
-      setPhotos([]); // Clear intermediate state instantly to prevent visual artifacts
-      loadPhotosForTemplate(templateId);
-    }
-  }, [templateId, loadPhotosForTemplate, setPhotos]);
-
-  useEffect(() => {
-    // Only save if the template is fully active.
-    // We intentionally omit templateId from dependencies so it doesn't trigger a save
-    // of old photos when instantly switching module paths.
-    if (activeTemplateRef.current) {
-      savePhotosForTemplate(activeTemplateRef.current);
-    }
-  }, [photos, savePhotosForTemplate]);
-
   // Bootstrapping Custom Templates and Gallery
   useEffect(() => {
     const savedTemplates = localStorage.getItem('customPhotoTemplates');
@@ -108,8 +88,35 @@ export const usePrintEngine = () => {
       }
     }
 
-    loadGalleryPhotos();
-  }, [templateId, navigate, setTemplates, setSelectedTemplate, loadGalleryPhotos]);
+    // Load gallery first, THEN trigger a template load once gallery is hydrated
+    loadGalleryPhotos().then(() => {
+      if (templateId) {
+        loadPhotosForTemplate(templateId);
+      }
+    });
+  }, [templateId, navigate, setTemplates, setSelectedTemplate, loadGalleryPhotos, loadPhotosForTemplate]);
+
+  const activeTemplateRef = useRef<string | null>(null);
+
+  // Sync with template
+  useEffect(() => {
+    if (templateId && activeTemplateRef.current !== templateId) {
+      activeTemplateRef.current = templateId;
+      setPhotos([]); // Clear intermediate state instantly to prevent visual artifacts
+      // The actual load is now handled in the bootstrap hook above or standard hook below 
+      // but only IF galleryPhotos is already hydrated.
+      if (galleryPhotos.length > 0) {
+        loadPhotosForTemplate(templateId);
+      }
+    }
+  }, [templateId, loadPhotosForTemplate, setPhotos, galleryPhotos]);
+
+  useEffect(() => {
+    // Only save if the template is fully active.
+    if (activeTemplateRef.current) {
+      savePhotosForTemplate(activeTemplateRef.current);
+    }
+  }, [photos, savePhotosForTemplate]);
 
   useEffect(() => {
     const customTemplates = templates.filter(t => t.isCustom);
