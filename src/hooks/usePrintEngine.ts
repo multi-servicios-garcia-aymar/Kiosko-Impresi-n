@@ -29,6 +29,7 @@ export const usePrintEngine = () => {
   const [scale, setScale] = useState(1);
   const [appScale, setAppScale] = useState(1);
   const [appDimensions, setAppDimensions] = useState({ width: 1280, height: 800 });
+  const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -38,12 +39,19 @@ export const usePrintEngine = () => {
     const updateAppScale = () => {
       if (wrapperRef.current) {
         const { clientWidth, clientHeight } = wrapperRef.current;
-        const newScale = Math.min(clientWidth / 1280, clientHeight / 800);
-        setAppScale(newScale);
-        setAppDimensions({
-          width: clientWidth / newScale,
-          height: clientHeight / newScale
-        });
+        if (clientWidth < 1024) {
+          setIsMobile(true);
+          setAppScale(1);
+          setAppDimensions({ width: clientWidth, height: clientHeight });
+        } else {
+          setIsMobile(false);
+          const newScale = Math.min(clientWidth / 1280, clientHeight / 800);
+          setAppScale(newScale);
+          setAppDimensions({
+            width: clientWidth / newScale,
+            height: clientHeight / newScale
+          });
+        }
       }
     };
 
@@ -363,6 +371,7 @@ export const usePrintEngine = () => {
     scale,
     appScale,
     appDimensions,
+    isMobile,
     wrapperRef,
     containerRef,
     fileInputRef,

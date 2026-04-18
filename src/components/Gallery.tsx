@@ -57,31 +57,31 @@ export const Gallery: React.FC<GalleryProps> = ({
                   )}
 
                   {/* Actions (Top Right) */}
-                  <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <div className="absolute top-1 right-1 flex gap-1 lg:opacity-0 opacity-100 lg:group-hover:opacity-100 transition-opacity z-10">
                     <button
                       onClick={(e) => handleEditFromGallery(gp, e)}
-                      className="p-1 bg-white/90 text-indigo-600 rounded hover:bg-white shadow-sm"
+                      className="p-1.5 lg:p-1 bg-white/90 text-indigo-600 rounded drop-shadow hover:bg-white"
                       title="Editar foto"
                       aria-label="Editar foto"
                     >
-                      <Edit2 className="w-3 h-3" />
+                      <Edit2 className="w-4 h-4 lg:w-3 lg:h-3" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteGalleryPhoto(gp.id, e)}
-                      className="p-1 bg-white/90 text-red-600 rounded hover:bg-white shadow-sm"
+                      className="p-1.5 lg:p-1 bg-white/90 text-red-600 rounded drop-shadow hover:bg-white"
                       title="Eliminar de la galería"
                       aria-label="Eliminar de la galería"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4 lg:w-3 lg:h-3" />
                     </button>
                   </div>
 
                   {/* Counter UI (Bottom) */}
-                  <div className="absolute bottom-0 inset-x-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 p-1 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 p-1 flex items-center justify-between lg:opacity-0 opacity-100 lg:group-hover:opacity-100 transition-opacity z-10">
                     <button
                       onClick={(e) => handleRemoveFromGalleryQueue(gp.id, e)}
                       disabled={quantity === 0}
-                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 font-medium"
+                      className="w-8 h-8 lg:w-6 lg:h-6 flex items-center justify-center rounded hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 font-medium text-lg lg:text-base"
                       aria-label="Disminuir cantidad"
                     >
                       -
@@ -93,7 +93,7 @@ export const Gallery: React.FC<GalleryProps> = ({
                       placeholder="Añadir"
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleManualQuantityChange(gp, e)}
-                      className="w-10 text-center text-[10px] font-bold text-slate-700 bg-transparent border-none focus:ring-0 p-0 m-0 placeholder:text-slate-700 placeholder:font-bold hide-number-spinners"
+                      className="w-12 lg:w-10 text-center text-xs lg:text-[10px] font-bold text-slate-700 bg-transparent border-none focus:ring-0 p-0 m-0 placeholder:text-slate-700 placeholder:font-bold hide-number-spinners"
                       aria-label="Cantidad a imprimir"
                     />
                     <button
@@ -101,7 +101,7 @@ export const Gallery: React.FC<GalleryProps> = ({
                         e.stopPropagation();
                         handleAddFromGallery(gp);
                       }}
-                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 font-medium"
+                      className="w-8 h-8 lg:w-6 lg:h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 font-medium text-lg lg:text-base"
                       aria-label="Aumentar cantidad"
                     >
                       +

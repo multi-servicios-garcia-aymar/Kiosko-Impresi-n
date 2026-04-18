@@ -16,6 +16,7 @@ export const PhotoPrintCreator: React.FC = () => {
     scale,
     appScale,
     appDimensions,
+    isMobile,
     wrapperRef,
     containerRef,
     fileInputRef,
@@ -40,16 +41,20 @@ export const PhotoPrintCreator: React.FC = () => {
   } = usePrintEngine();
 
   return (
-    <div ref={wrapperRef} className="w-full h-full flex items-center justify-center overflow-hidden print:overflow-visible bg-slate-50 print:bg-white print:block">
+    <div ref={wrapperRef} className="w-full h-full flex flex-col items-center justify-start overflow-y-auto lg:overflow-hidden print:overflow-visible bg-slate-50 print:bg-white print:block">
       <style>{printStyles}</style>
       
       <div 
-        className="flex flex-col bg-slate-50 shrink-0 origin-center print:hidden"
-        style={{
+        className="flex flex-col bg-slate-50 shrink-0 origin-top print:hidden w-full lg:h-full"
+        style={!isMobile ? {
           width: `${appDimensions.width}px`,
           height: `${appDimensions.height}px`,
           transform: `scale(${appScale})`,
           padding: '24px'
+        } : {
+          padding: '16px',
+          minHeight: '100%',
+          width: '100%'
         }}
       >
         {/* Template Navigation Bar */}
@@ -60,9 +65,9 @@ export const PhotoPrintCreator: React.FC = () => {
           onSelectTemplate={navigateToTemplate}
         />
 
-      <div className="flex flex-row gap-6 print:hidden flex-1 min-h-0">
+      <div className="flex flex-col-reverse lg:flex-row gap-6 print:hidden flex-1 min-h-0 mt-4 lg:mt-0">
         {/* Controls Panel */}
-        <div className="w-[360px] shrink-0 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="w-full lg:w-[360px] shrink-0 flex flex-col min-h-[500px] lg:min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="flex flex-col h-full p-4 space-y-4">
             <div className="shrink-0">
               <h1 className="text-xl font-bold text-slate-900 mb-1">{selectedTemplate.name}</h1>
@@ -131,7 +136,7 @@ export const PhotoPrintCreator: React.FC = () => {
         </div>
 
         {/* Preview Area */}
-        <div className="flex-1 flex flex-col min-h-0 bg-slate-200/50 rounded-2xl border border-slate-200 overflow-hidden relative">
+        <div className="flex-1 flex flex-col min-h-[500px] lg:min-h-0 bg-slate-200/50 rounded-2xl border border-slate-200 overflow-hidden relative">
           <div className="absolute top-0 inset-x-0 text-center bg-white/80 backdrop-blur-md py-2 z-10 border-b border-slate-200 shadow-sm">
             <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-0.5">Vista Previa ({getTotalPages()} {getTotalPages() === 1 ? 'Hoja' : 'Hojas'} {selectedTemplate.pageSize})</h2>
             <p className="text-[10px] text-slate-400 italic">Ajusta tu foto arrastrándola en el recuadro resaltado</p>
