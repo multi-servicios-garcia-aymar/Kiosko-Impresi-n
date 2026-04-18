@@ -77,6 +77,7 @@ export const savePhotoToGallery = async (photoUrl: string): Promise<GalleryPhoto
 
         // Broadcast to other devices via Database Table
         await supabase.from('kiosk_gallery_photos').insert({
+          id: id, // Force PostgreSQL to use our exact Local Timestamp ID
           machine_id: machineId,
           storage_path: uploadData.path,
           created_at: new Date(timestamp).toISOString()
@@ -152,12 +153,28 @@ export const deleteSavedPhoto = async (id: string, cloudPath?: string): Promise<
   // 1. Cloud Deletion (if possible)
   if (cloudPath) {
     try {
-      // Remove from table
+      // Remove from table (by original unique machine path or id)
       await supabase.from('kiosk_gallery_photos').delete().eq('storage_path', cloudPath);
       // Remove from bucket
       await supabase.storage.from('gallery').remove([cloudPath]);
     } catch(e) {
       console.error('Failed to remote photo from cloud', e);
+    }
+  } else {
+    // If we weren't passed a cloud path specifically, let's try to find it via the custom ID
+    try {
+       const { data: { session } } = await supabase.auth.getSession();
+       const machineId = session?.user?.user_metadata?.kiosk_license?.hwid;
+       if (machineId) {
+          // Identify it by id and machine
+          const { data } = await supabase.from('kiosk_gallery_photos').select('storage_path').eq('id', id).eq('machine_id', machineId).single();
+          if (data && data.storage_path) {
+             await supabase.from('kiosk_gallery_photos').delete().eq('storage_path', data.storage_path);
+             await supabase.storage.from('gallery').remove([data.storage_path]);
+          }
+       }
+    } catch (e) {
+      console.error('Failed fallback cloud deletion', e);
     }
   }
 
