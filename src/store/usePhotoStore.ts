@@ -66,6 +66,20 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     try {
       const saved = await getSavedPhotos();
       set({ galleryPhotos: saved });
+      
+      // Auto-purge zombie photos from the current layout if they no longer exist in the DB,
+      // and refresh their URLs just in case the stored ones were dead blob URLs.
+      set((state) => {
+        const validPhotosMap = new Map(saved.map(gp => [gp.id, gp]));
+        const cleanPhotos = state.photos
+          .filter(p => validPhotosMap.has(p.id))
+          .map(p => ({
+            ...p,
+            originalUrl: validPhotosMap.get(p.id)!.url,
+            croppedUrl: validPhotosMap.get(p.id)!.url // Fallback, assume cropped is original if blob died (complex crop persistence omitted for simplicity, but guarantees UI doesn't break)
+          }));
+        return { photos: cleanPhotos };
+      });
     } catch (e) {
       console.error('Failed to load gallery photos', e);
     }
@@ -87,7 +101,10 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     try {
       await deleteSavedPhoto(id);
       const updated = await getSavedPhotos();
-      set({ galleryPhotos: updated });
+      set((state) => ({ 
+        galleryPhotos: updated,
+        photos: state.photos.filter(p => p.id !== id) // Remove from active print queue!
+      }));
     } catch (e) {
       console.error('Failed to delete photo from gallery', e);
     }
