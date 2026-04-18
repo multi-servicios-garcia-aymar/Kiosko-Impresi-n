@@ -50,7 +50,8 @@ export const getCroppedImg = async (
   imageSrc: string,
   pixelCrop: any,
   rotation: number,
-  bgColor: string
+  bgColor: string,
+  bgImgSrc?: string
 ): Promise<string> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -83,11 +84,41 @@ export const getCroppedImg = async (
   croppedCanvas.width = pixelCrop.width;
   croppedCanvas.height = pixelCrop.height;
 
+  // 1. Draw solid background color
   if (bgColor !== 'transparent') {
     croppedCtx.fillStyle = bgColor;
     croppedCtx.fillRect(0, 0, croppedCanvas.width, croppedCanvas.height);
   }
 
+  // 2. Draw background image (cover aspect ratio)
+  if (bgImgSrc) {
+    try {
+      const bgImg = await createImage(bgImgSrc);
+      const bgRatio = bgImg.width / bgImg.height;
+      const canvasRatio = croppedCanvas.width / croppedCanvas.height;
+      
+      let drawWidth = croppedCanvas.width;
+      let drawHeight = croppedCanvas.height;
+      let offsetX = 0;
+      let offsetY = 0;
+      
+      if (bgRatio > canvasRatio) {
+        drawHeight = croppedCanvas.height;
+        drawWidth = drawHeight * bgRatio;
+        offsetX = (croppedCanvas.width - drawWidth) / 2;
+      } else {
+        drawWidth = croppedCanvas.width;
+        drawHeight = drawWidth / bgRatio;
+        offsetY = (croppedCanvas.height - drawHeight) / 2;
+      }
+      
+      croppedCtx.drawImage(bgImg, offsetX, offsetY, drawWidth, drawHeight);
+    } catch(e) {
+      console.error("Failed to load background image", e);
+    }
+  }
+
+  // 3. Draw the user's cropped foreground image
   croppedCtx.drawImage(
     canvas,
     pixelCrop.x,

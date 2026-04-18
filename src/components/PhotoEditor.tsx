@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { motion } from 'motion/react';
-import { Upload, ZoomIn, ZoomOut, Eraser, Image as ImageIcon, Check, X, RotateCcw, RotateCw } from 'lucide-react';
+import { Upload, ZoomIn, ZoomOut, Eraser, Image as ImageIcon, Check, X, RotateCcw, RotateCw, Palette, Trash2 } from 'lucide-react';
 import { getCroppedImg } from '../lib/imageUtils';
 
 interface PhotoEditorProps {
@@ -21,6 +21,8 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
   const [bgProgress, setBgProgress] = useState(0);
   const [bgStatus, setBgStatus] = useState('');
   const workerRef = useRef<Worker | null>(null);
+  const bgInputRef = useRef<HTMLInputElement>(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Inicializar Web Worker
@@ -31,6 +33,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
   }, []);
   const [bgRemoved, setBgRemoved] = useState(false);
   const [bgColor, setBgColor] = useState('transparent');
+  const [bgImg, setBgImg] = useState<string | null>(null);
 
   const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -39,7 +42,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
   const handleSave = async () => {
     if (currentImage && croppedAreaPixels) {
       try {
-        const croppedImage = await getCroppedImg(currentImage, croppedAreaPixels, rotation, bgColor);
+        const croppedImage = await getCroppedImg(currentImage, croppedAreaPixels, rotation, bgColor, bgImg || undefined);
         onSave(croppedImage);
       } catch (e) {
         console.error(e);
@@ -52,6 +55,8 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
       setCurrentImage(photoUrl);
       setBgRemoved(false);
       setBgProgress(0);
+      setBgColor('transparent');
+      setBgImg(null);
       return;
     }
 
@@ -84,11 +89,32 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
     workerRef.current.postMessage({ photoUrl });
   };
 
-  const bgColors = ['transparent', '#ffffff', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#3b82f6', '#10b981'];
+  const handleBgImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setBgImg(url);
+      setBgColor('transparent');
+    }
+    // Reset file input
+    if (bgInputRef.current) bgInputRef.current.value = '';
+  };
+
+  const bgColors = [
+    'transparent', 
+    '#ffffff', 
+    '#e5c8e2', // Requested Pink
+    '#8dd1e7', // Requested Blue
+    '#f1f5f9', 
+    '#e2e8f0', 
+    '#cbd5e1', 
+    '#3b82f6', 
+    '#10b981'
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh]">
         <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
           <h3 className="font-bold text-slate-800">Editor de Foto de Perfil</h3>
           <button onClick={onCancel} className="text-slate-500 hover:text-slate-700 transition-colors">
@@ -96,9 +122,9 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
           {/* Cropper Area */}
-          <div className="relative flex-1 bg-slate-900 min-h-[300px]">
+          <div className="relative flex-1 bg-slate-900 min-h-[400px]">
             {currentImage && (
               <Cropper
                 image={currentImage}
@@ -112,7 +138,10 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                 onRotationChange={setRotation}
                 style={{
                   containerStyle: {
-                    backgroundColor: bgColor === 'transparent' ? '#0f172a' : bgColor,
+                    backgroundColor: bgColor === 'transparent' && !bgImg ? '#0f172a' : bgColor,
+                    backgroundImage: bgImg ? `url(${bgImg})` : (bgColor === 'transparent' ? 'none' : 'none'),
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                   }
                 }}
               />
@@ -137,7 +166,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
           </div>
 
           {/* Controls */}
-          <div className="w-full md:w-72 p-6 bg-white overflow-y-auto border-l border-slate-200">
+          <div className="w-full lg:w-80 p-6 bg-white overflow-y-auto border-l border-slate-200">
             <div className="space-y-6">
               {/* Zoom Control */}
               <div>
@@ -214,28 +243,97 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="space-y-2"
+                  className="space-y-4"
                 >
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block flex items-center gap-1">
-                    <ImageIcon className="w-3 h-3" /> Reemplazar Fondo
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {bgColors.map((color) => (
+                  <hr className="border-slate-100" />
+                  
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Palette className="w-3 h-3" /> Color de Fondo
+                    </label>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {bgColors.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => {
+                            setBgColor(color);
+                            setBgImg(null);
+                          }}
+                          className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
+                            bgColor === color && !bgImg ? 'border-indigo-600 scale-110 shadow-md' : 'border-slate-200'
+                          }`}
+                          style={{ 
+                            backgroundColor: color === 'transparent' ? '#fff' : color,
+                            backgroundImage: color === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)' : 'none',
+                            backgroundSize: color === 'transparent' ? '10px 10px' : 'auto',
+                            backgroundPosition: color === 'transparent' ? '0 0, 0 5px, 5px -5px, -5px 0px' : '0% 0%'
+                          }}
+                          title={color === 'transparent' ? 'Transparente' : color}
+                        />
+                      ))}
+                      
+                      {/* Native Color Picker Trigger */}
+                      <div className="relative">
+                        <button
+                          onClick={() => colorInputRef.current?.click()}
+                          className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-transform hover:scale-110 ${
+                            !bgColors.includes(bgColor) && bgColor !== 'transparent' && !bgImg ? 'border-indigo-600 scale-110 shadow-md' : 'border-slate-200 border-dashed'
+                          }`}
+                          style={{ backgroundColor: !bgColors.includes(bgColor) && !bgImg ? bgColor : '#fff' }}
+                          title="Elegir otro color"
+                        >
+                          {bgColors.includes(bgColor) || bgImg ? (
+                            <div className="w-full h-full rounded-full" style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }} />
+                          ) : null}
+                        </button>
+                        <input
+                          type="color"
+                          ref={colorInputRef}
+                          value={bgColor !== 'transparent' ? bgColor : '#ffffff'}
+                          onChange={(e) => {
+                            setBgColor(e.target.value);
+                            setBgImg(null);
+                          }}
+                          className="absolute opacity-0 w-0 h-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <ImageIcon className="w-3 h-3" /> Imagen de Fondo
+                    </label>
+                    <div className="flex gap-2">
                       <button
-                        key={color}
-                        onClick={() => setBgColor(color)}
-                        className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                          bgColor === color ? 'border-indigo-600 scale-110' : 'border-slate-200'
+                        onClick={() => bgInputRef.current?.click()}
+                        className={`flex-1 py-2 px-3 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-medium transition-colors ${
+                          bgImg ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-dashed border-slate-200 hover:border-indigo-300 text-slate-600'
                         }`}
-                        style={{ 
-                          backgroundColor: color === 'transparent' ? '#fff' : color,
-                          backgroundImage: color === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)' : 'none',
-                          backgroundSize: color === 'transparent' ? '10px 10px' : 'auto',
-                          backgroundPosition: color === 'transparent' ? '0 0, 0 5px, 5px -5px, -5px 0px' : '0% 0%'
-                        }}
-                        title={color === 'transparent' ? 'Transparente' : color}
+                      >
+                        <Upload className="w-3 h-3" />
+                        {bgImg ? 'Cambiar Imagen' : 'Subir Imagen'}
+                      </button>
+                      <input
+                        type="file"
+                        ref={bgInputRef}
+                        accept="image/*"
+                        onChange={handleBgImageUpload}
+                        className="hidden"
                       />
-                    ))}
+                      {bgImg && (
+                        <button
+                          onClick={() => {
+                            setBgImg(null);
+                            setBgColor('transparent');
+                          }}
+                          className="w-10 flex flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                          title="Eliminar imagen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -243,7 +341,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+        <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3 shrink-0">
           <button
             onClick={onCancel}
             className="px-6 py-2 rounded-xl text-slate-600 font-medium hover:bg-slate-200 transition-colors"
