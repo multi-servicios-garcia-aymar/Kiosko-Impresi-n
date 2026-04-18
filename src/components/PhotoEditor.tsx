@@ -124,7 +124,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
           {/* Cropper Area */}
-          <div className="relative flex-1 bg-slate-900 min-h-[400px]">
+          <div className="relative flex-1 bg-slate-900 min-h-[300px] lg:min-h-[400px]">
             {currentImage && (
               <Cropper
                 image={currentImage}

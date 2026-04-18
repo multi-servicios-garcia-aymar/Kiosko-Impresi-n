@@ -61,9 +61,9 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({ onClose }) => 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="max-w-xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+        className="max-w-xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)]"
       >
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
               <Smartphone className="w-4 h-4" />

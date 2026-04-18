@@ -96,7 +96,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50"
+                    className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-64 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 transform origin-top-right"
                   >
                       <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-3 pb-3 border-b border-slate-50">
