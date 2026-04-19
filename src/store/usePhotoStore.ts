@@ -161,86 +161,101 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       // Use a unique channel ID to avoid "Subscription already exists" errors
       const channelId = `gallery-sync-${machineId}`;
       
-      // Clean up previous channel if any
-      supabase.removeChannel(supabase.channel(channelId));
+      const setupChannel = (attempt = 0) => {
+        if (attempt > 5) {
+          console.error('❌ Máximo de reintentos Realtime alcanzado.');
+          set({ syncStatus: 'error' });
+          return;
+        }
 
-      const channel = supabase
-        .channel(channelId)
-        .on(
-          'postgres_changes',
-          {
-            event: '*', 
-            schema: 'public',
-            table: 'kiosk_gallery_photos',
-            filter: `machine_id=eq.${machineId}`
-          },
-          async (payload) => {
-            console.log('🔥 Cambios detectados en Galería Nube:', payload.eventType, payload);
-            set({ syncStatus: 'connecting' });
-            
-            if (payload.eventType === 'INSERT') {
-               const newRow = payload.new;
-               
-               // Fallback: If payload is missing data (due to RLS or partial sync), re-fetch everything
-               if (!newRow || !newRow.id || !newRow.storage_path) {
-                 console.log('⚠️ Payload incompleto detectado, solicitando sincronización profunda...');
-                 await get().loadGalleryPhotos();
-                 return;
-               }
+        // Clean up previous channel if any
+        supabase.removeChannel(supabase.channel(channelId));
 
-               const currentGallery = get().galleryPhotos;
-               
-               // Avoid duplication if this session was the one that uploaded it
-               if (currentGallery.some(p => p.id === newRow.id)) {
-                 set({ syncStatus: 'synced' });
-                 return;
-               }
-               
-               const { data: { publicUrl } } = supabase.storage
-                 .from('gallery')
-                 .getPublicUrl(newRow.storage_path);
+        const channel = supabase
+          .channel(channelId)
+          .on(
+            'postgres_changes',
+            {
+              event: '*', 
+              schema: 'public',
+              table: 'kiosk_gallery_photos',
+              filter: `machine_id=eq.${machineId}`
+            },
+            async (payload) => {
+              console.log('🔥 Cambios detectados en Galería Nube:', payload.eventType, payload);
+              set({ syncStatus: 'connecting' });
+              
+              if (payload.eventType === 'INSERT') {
+                 const newRow = payload.new;
                  
-               const incomingPhoto: GalleryPhoto = {
-                 id: newRow.id,
-                 timestamp: new Date(newRow.created_at).getTime(),
-                 url: publicUrl,
-                 cloudPath: newRow.storage_path,
-                 templateId: newRow.template_id || 'default'
-               };
-               
-               // Instant UI Update
-               set((state) => ({ 
-                  galleryPhotos: [incomingPhoto, ...state.galleryPhotos].sort((a, b) => b.timestamp - a.timestamp),
-                  syncStatus: 'synced'
-               }));
-            } 
-            else if (payload.eventType === 'DELETE') {
-               const oldRow = payload.old;
-               if (oldRow && oldRow.id) {
-                  set((state) => ({
-                    galleryPhotos: state.galleryPhotos.filter(p => p.id !== oldRow.id),
-                    photos: state.photos.filter(p => p.id !== oldRow.id),
+                 // Fallback: If payload is missing data (due to RLS or partial sync), re-fetch everything
+                 if (!newRow || !newRow.id || !newRow.storage_path) {
+                   console.log('⚠️ Payload incompleto detectado, solicitando sincronización profunda...');
+                   await get().loadGalleryPhotos();
+                   return;
+                 }
+
+                 const currentGallery = get().galleryPhotos;
+                 
+                 // Avoid duplication if this session was the one that uploaded it
+                 if (currentGallery.some(p => p.id === newRow.id)) {
+                   set({ syncStatus: 'synced' });
+                   return;
+                 }
+                 
+                 const { data: { publicUrl } } = supabase.storage
+                   .from('gallery')
+                   .getPublicUrl(newRow.storage_path);
+                   
+                 const incomingPhoto: GalleryPhoto = {
+                   id: newRow.id,
+                   timestamp: new Date(newRow.created_at).getTime(),
+                   url: publicUrl,
+                   cloudPath: newRow.storage_path,
+                   templateId: newRow.template_id || 'default'
+                 };
+                 
+                 // Instant UI Update
+                 set((state) => ({ 
+                    galleryPhotos: [incomingPhoto, ...state.galleryPhotos].sort((a, b) => b.timestamp - a.timestamp),
                     syncStatus: 'synced'
-                  }));
-               } else {
-                 set({ syncStatus: 'synced' });
-               }
-            } else {
-              set({ syncStatus: 'synced' });
+                 }));
+              } 
+              else if (payload.eventType === 'DELETE') {
+                 const oldRow = payload.old;
+                 if (oldRow && oldRow.id) {
+                    set((state) => ({
+                      galleryPhotos: state.galleryPhotos.filter(p => p.id !== oldRow.id),
+                      photos: state.photos.filter(p => p.id !== oldRow.id),
+                      syncStatus: 'synced'
+                    }));
+                 } else {
+                   set({ syncStatus: 'synced' });
+                 }
+              } else {
+                set({ syncStatus: 'synced' });
+              }
             }
-          }
-        )
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('✅ Suscripción Realtime establecida');
-            // Al conectar, forzar una carga inicial para atrapar lo que nos perdimos
-            await get().loadGalleryPhotos();
-            set({ syncStatus: 'synced' });
-          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-            console.error('❌ Canal Realtime cerrado o con error');
-            set({ syncStatus: 'error' });
-          }
-        });
+          )
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log('✅ Suscripción Realtime establecida');
+              // Al conectar, forzar una carga inicial para atrapar lo que nos perdimos
+              await get().loadGalleryPhotos();
+              set({ syncStatus: 'synced' });
+            } else if (status === 'CLOSED') {
+              console.warn('⚠️ Canal Realtime cerrado, reintentando...');
+              setTimeout(() => setupChannel(attempt + 1), 2000);
+            } else if (status === 'CHANNEL_ERROR') {
+              console.error('❌ Error crítico en canal Realtime');
+              set({ syncStatus: 'error' });
+              // Reintentar tras error con delay exponencial
+              setTimeout(() => setupChannel(attempt + 1), 5000 * (attempt + 1));
+            }
+          });
+      };
+
+      setupChannel();
     });
   }
 }));
