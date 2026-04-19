@@ -148,8 +148,17 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                 onRotationChange={setRotation}
                 style={{
                   containerStyle: {
-                    backgroundColor: 'transparent', // Transparent to see our div behind
+                    backgroundColor: 'transparent', 
                     backgroundImage: 'none',
+                  },
+                  mediaStyle: {
+                    backgroundColor: 'transparent',
+                  },
+                  cropAreaStyle: {
+                    // This creates a subtle hint that the background is transparent
+                    backgroundImage: bgColor === 'transparent' && !bgImg ? 'linear-gradient(45deg, #0f172a 25%, transparent 25%), linear-gradient(-45deg, #0f172a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #0f172a 75%), linear-gradient(-45deg, transparent 75%, #0f172a 75%)' : 'none',
+                    backgroundSize: '20px 20px',
+                    backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
                   }
                 }}
               />

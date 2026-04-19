@@ -24,8 +24,8 @@ export const compressImage = async (file: File, maxWidth = 1500): Promise<string
         }
         
         ctx.drawImage(img, 0, 0, width, height);
-        // Compress to WebP or JPEG
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
+        // Compress to WebP to preserve transparency if it exists
+        resolve(canvas.toDataURL('image/webp', 0.85));
       };
       img.onerror = (error) => reject(error);
     };
