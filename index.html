@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Kiosko Fotos - Centro de Impresión Fotográfica. Configura, diseña e imprime tus fotos para documentos, pasaportes y postales con precisión milimétrica." />
     <meta name="theme-color" content="#4f46e5" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Kiosko Fotos">
     
     <!-- Open Graph / Social Media -->
     <meta property="og:title" content="Kiosko Fotos - Impresión Fotográfica" />
@@ -24,6 +28,15 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registrado:', reg))
+            .catch(err => console.log('Fallo al registrar Service Worker:', err));
+        });
+      }
+    </script>
   </body>
 </html>
 

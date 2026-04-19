@@ -1,17 +1,27 @@
 {
-  "short_name": "Kiosko Fotos",
-  "name": "Centro de Impresión Fotográfica",
-  "description": "Configura, diseña e imprime tus fotos para documentos, pasaportes y postales con precisión milimétrica.",
+  "short_name": "Kiosko",
+  "name": "Kiosko Fotos Pro",
+  "description": "Centro de Impresión Fotográfica Profesional de alta precisión.",
   "icons": [
     {
       "src": "/icon.svg",
       "type": "image/svg+xml",
       "sizes": "512x512",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
-  "background_color": "#ffffff",
+  "start_url": ".",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#4f46e5"
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "categories": ["photography", "utilities"],
+  "screenshots": []
 }
