@@ -78,9 +78,10 @@ export const savePhotoToGallery = async (photoUrl: string, templateId: string): 
         finalUrl = publicUrl;
 
         // Broadcast to other devices via Database Table
-        // Note: We'll attempt to store template_id if the schema supports it
+        // Note: We'll attempt to store template_id and user_id if the schema supports it
         const { error: insertError } = await supabase.from('kiosk_gallery_photos').insert({
           id: id, // Force PostgreSQL to use our exact Local Timestamp ID
+          user_id: user.id, // Linking photo to the specific user profile
           machine_id: machineId,
           storage_path: uploadData.path,
           template_id: templateId,
@@ -110,7 +111,7 @@ export const getSavedPhotos = async (): Promise<GalleryPhoto[]> => {
       const { data: cloudPhotos, error } = await supabase
         .from('kiosk_gallery_photos')
         .select('*')
-        .eq('machine_id', machineId)
+        .or(`user_id.eq.${user.id},machine_id.eq.${machineId}`) // Coverage for both machine and user
         .order('created_at', { ascending: false })
         .limit(200); // Increased limit to avoid only showing last 2
 

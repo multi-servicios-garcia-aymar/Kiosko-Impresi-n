@@ -1,3 +1,7 @@
 User-agent: *
 Allow: /
-Sitemap: https://kiosko-impresion.vercel.app/sitemap.xml
+Disallow: /activation
+Disallow: /admin
+
+# Sitemap link (update when real domain is known)
+# Sitemap: https://nexo-kiosk.example.com/sitemap.xml

@@ -101,7 +101,7 @@ export const Gallery: React.FC<GalleryProps> = ({
                 >
                   <img
                     src={gp.url}
-                    alt="Gallery item"
+                    alt={`Miniatura de foto en galería - Nexo Network Ec`}
                     className="w-full h-full object-contain cursor-pointer"
                     onClick={() => handleAddFromGallery(gp)}
                   />

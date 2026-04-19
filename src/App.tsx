@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthGuard } from './components/AuthGuard';
 import { LicenseGuard } from './components/LicenseGuard';
 import { LicenseProvider } from './context/LicenseContext';
@@ -10,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 // Lazy load components for code splitting
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const PhotoPrintCreator = React.lazy(() => import('./components/PhotoPrintCreator').then(module => ({ default: module.PhotoPrintCreator })));
+const Legal = React.lazy(() => import('./pages/Legal'));
 
 // Fallback loader component
 const PageLoader = () => (
@@ -23,23 +25,26 @@ const PageLoader = () => (
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <AuthGuard>
-        <LicenseProvider>
-          <LicenseGuard>
-            <Router>
-              <MainLayout>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/photo-print/:templateId" element={<PhotoPrintCreator />} />
-                  </Routes>
-                </Suspense>
-              </MainLayout>
-            </Router>
-          </LicenseGuard>
-        </LicenseProvider>
-      </AuthGuard>
-    </ErrorBoundary>
+    <HelmetProvider>
+      <ErrorBoundary>
+        <AuthGuard>
+          <LicenseProvider>
+            <LicenseGuard>
+              <Router>
+                <MainLayout>
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/photo-print/:templateId" element={<PhotoPrintCreator />} />
+                      <Route path="/legal" element={<Legal />} />
+                    </Routes>
+                  </Suspense>
+                </MainLayout>
+              </Router>
+            </LicenseGuard>
+          </LicenseProvider>
+        </AuthGuard>
+      </ErrorBoundary>
+    </HelmetProvider>
   );
 }

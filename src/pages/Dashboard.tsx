@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { KioskButton } from '../components/KioskButton';
+import { SEO, StructuredData } from '../components/SEO';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { DEFAULT_TEMPLATES } from '../types/photo';
 
@@ -24,6 +25,11 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 h-full overflow-y-auto">
+      <SEO 
+        title="Centro de Impresión Fotográfica"
+        description="Selecciona formatos de impresión carnet, pasaporte o postales con Nexo Network Ec."
+      />
+      <StructuredData />
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

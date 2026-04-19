@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut, Smartphone } from 'lucide-react';
+import { User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut, Smartphone, Shield, Scale } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ActivationScreen } from '../ActivationScreen';
 import { DeviceSyncModal } from '../DeviceSyncModal';
@@ -227,6 +227,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                             </div>
                           </div>
 
+                          <button 
+                            onClick={() => {
+                              setIsAdminOpen(false);
+                              navigate('/legal');
+                            }}
+                            className="w-full flex items-center gap-2 text-[10px] font-bold text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors py-1 border-t border-slate-50 mt-1 pt-3"
+                          >
+                            <Scale className="w-3 h-3" />
+                            Información Legal
+                          </button>
+
                           <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">ID de Equipo</span>
@@ -252,6 +263,30 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           {children}
         </AnimatePresence>
       </main>
+
+      {/* Global Bottom Credits - Tiny & Elegant */}
+      <footer className="bg-white border-t border-slate-100 py-3 px-4 print:hidden shrink-0">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5 opacity-50 hover:opacity-100 transition-opacity">
+            <Shield className="w-3 h-3 text-indigo-500" />
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+              Nexo Security Scan Active
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={() => navigate('/legal')}
+              className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors"
+            >
+              Privacidad y Términos
+            </button>
+            <span className="text-[10px] font-medium text-slate-300">
+              © {new Date().getFullYear()} NEXO NETWORK EC
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Upload, Printer } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { PhotoEditor } from './PhotoEditor';
 import { Gallery } from './Gallery';
+import { SEO } from './SEO';
 import { TemplateNav } from './TemplateNav';
 import { usePrintEngine } from '../hooks/usePrintEngine';
 
@@ -44,6 +45,10 @@ export const PhotoPrintCreator: React.FC = () => {
 
   return (
     <div ref={wrapperRef} className="w-full h-full flex flex-col items-center justify-start overflow-y-auto lg:overflow-hidden print:overflow-visible bg-slate-50 print:bg-white print:block">
+      <SEO 
+        title={`Imprimir ${selectedTemplate.name}`}
+        description={`Configura e imprime tus fotos en formato ${selectedTemplate.name} con las dimensiones correctas: ${selectedTemplate.photoWidth}x${selectedTemplate.photoHeight}mm.`}
+      />
       <style>{printStyles}</style>
       
       <div 
@@ -183,7 +188,7 @@ export const PhotoPrintCreator: React.FC = () => {
                           {slotPhoto ? (
                             <img
                               src={slotPhoto.croppedUrl}
-                              alt={`Preview ${globalIndex}`}
+                              alt={`Foto para imprimir slot ${globalIndex + 1} - Formato ${selectedTemplate.name}`}
                               className="absolute pointer-events-none select-none"
                               style={{
                                 width: selectedTemplate.rotate ? `${selectedTemplate.photoHeight * 3.78}px` : '100%',
