@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, Settings, HelpCircle, User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut, Smartphone } from 'lucide-react';
+import { User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ActivationScreen } from '../ActivationScreen';
 import { DeviceSyncModal } from '../DeviceSyncModal';
@@ -252,22 +252,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           {children}
         </AnimatePresence>
       </main>
-
-      {/* Mobile Bottom Nav */}
-      <div className="md:hidden sticky bottom-0 bg-white border-t border-slate-200 px-6 py-3 flex justify-between items-center z-50 print:hidden">
-        <button onClick={() => navigate('/')} className="flex flex-col items-center gap-1 text-indigo-600">
-          <LayoutGrid className="w-6 h-6" />
-          <span className="text-[10px] font-medium uppercase tracking-wider">Inicio</span>
-        </button>
-        <button className="flex flex-col items-center gap-1 text-slate-400">
-          <Settings className="w-6 h-6" />
-          <span className="text-[10px] font-medium uppercase tracking-wider">Ajustes</span>
-        </button>
-        <button className="flex flex-col items-center gap-1 text-slate-400">
-          <HelpCircle className="w-6 h-6" />
-          <span className="text-[10px] font-medium uppercase tracking-wider">Ayuda</span>
-        </button>
-      </div>
     </div>
   );
 }
