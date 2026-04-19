@@ -111,7 +111,8 @@ export const getSavedPhotos = async (): Promise<GalleryPhoto[]> => {
         .from('kiosk_gallery_photos')
         .select('*')
         .eq('machine_id', machineId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(200); // Increased limit to avoid only showing last 2
 
       if (!error && cloudPhotos && cloudPhotos.length > 0) {
         return cloudPhotos.map((cp: any) => {

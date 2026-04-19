@@ -37,7 +37,9 @@ export const PhotoPrintCreator: React.FC = () => {
     navigateToHome,
     navigateToTemplate,
     getPreviewGridStyles,
-    printStyles
+    printStyles,
+    showAllPhotos,
+    setShowAllPhotos
   } = usePrintEngine();
 
   return (
@@ -108,6 +110,8 @@ export const PhotoPrintCreator: React.FC = () => {
               handleDeleteGalleryPhoto={handleDeleteGalleryPhoto}
               handleRemoveFromGalleryQueue={handleRemoveFromGalleryQueue}
               handleManualQuantityChange={handleManualQuantityChange}
+              showAllPhotos={showAllPhotos}
+              setShowAllPhotos={setShowAllPhotos}
             />
 
           </div>

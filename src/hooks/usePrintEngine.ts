@@ -15,10 +15,12 @@ export const usePrintEngine = () => {
     photos,
     galleryPhotos,
     editingImageUrl,
+    showAllPhotos,
     setTemplates,
     setSelectedTemplate,
     setPhotos,
     setEditingImageUrl,
+    setShowAllPhotos,
     loadPhotosForTemplate,
     savePhotosForTemplate,
     loadGalleryPhotos,
@@ -381,7 +383,7 @@ export const usePrintEngine = () => {
     templates,
     selectedTemplate,
     photos,
-    galleryPhotos: galleryPhotos.filter(p => !templateId || p.templateId === templateId),
+    galleryPhotos: galleryPhotos.filter(p => showAllPhotos || !templateId || p.templateId === templateId),
     editingImageUrl,
     scale,
     appScale,
@@ -407,6 +409,8 @@ export const usePrintEngine = () => {
     navigateToHome,
     navigateToTemplate,
     getPreviewGridStyles,
-    printStyles
+    printStyles,
+    showAllPhotos,
+    setShowAllPhotos
   };
 };

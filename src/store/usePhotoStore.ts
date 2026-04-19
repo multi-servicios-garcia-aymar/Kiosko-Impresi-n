@@ -11,12 +11,14 @@ interface PhotoStore {
   editingImageUrl: string | null;
   cloudSyncInitialized: boolean;
   syncStatus: 'connecting' | 'synced' | 'error' | 'idle';
+  showAllPhotos: boolean;
   
   setTemplates: (templates: PhotoTemplate[]) => void;
   setSelectedTemplate: (template: PhotoTemplate) => void;
   setPhotos: (photos: PhotoData[] | ((prev: PhotoData[]) => PhotoData[])) => void;
   setGalleryPhotos: (photos: GalleryPhoto[]) => void;
   setEditingImageUrl: (url: string | null) => void;
+  setShowAllPhotos: (show: boolean) => void;
   
   loadPhotosForTemplate: (templateId: string) => void;
   savePhotosForTemplate: (templateId: string) => void;
@@ -34,6 +36,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   editingImageUrl: null,
   cloudSyncInitialized: false,
   syncStatus: 'idle',
+  showAllPhotos: false,
 
   setTemplates: (templates) => set({ templates }),
   setSelectedTemplate: (template) => set({ selectedTemplate: template }),
@@ -48,6 +51,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   
   setGalleryPhotos: (galleryPhotos) => set({ galleryPhotos }),
   setEditingImageUrl: (url) => set({ editingImageUrl: url }),
+  setShowAllPhotos: (showAllPhotos) => set({ showAllPhotos }),
 
   loadPhotosForTemplate: (templateId) => {
     const savedPhotosStr = localStorage.getItem(`photo_state_${templateId}`);

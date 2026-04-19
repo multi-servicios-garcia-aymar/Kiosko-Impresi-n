@@ -12,6 +12,8 @@ interface GalleryProps {
   handleDeleteGalleryPhoto: (id: string, e: React.MouseEvent) => void;
   handleRemoveFromGalleryQueue: (id: string, e: React.MouseEvent) => void;
   handleManualQuantityChange: (photo: GalleryPhoto, e: React.ChangeEvent<HTMLInputElement>) => void;
+  showAllPhotos?: boolean;
+  setShowAllPhotos?: (show: boolean) => void;
 }
 
 export const Gallery: React.FC<GalleryProps> = ({
@@ -22,6 +24,8 @@ export const Gallery: React.FC<GalleryProps> = ({
   handleDeleteGalleryPhoto,
   handleRemoveFromGalleryQueue,
   handleManualQuantityChange,
+  showAllPhotos = false,
+  setShowAllPhotos
 }) => {
   const syncStatus = usePhotoStore((state) => state.syncStatus);
 
@@ -60,7 +64,22 @@ export const Gallery: React.FC<GalleryProps> = ({
         <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
           <Library className="w-3 h-3" /> 2. Tu Galería
         </h2>
-        {getSyncIndicator()}
+        <div className="flex items-center gap-3">
+          {setShowAllPhotos && (
+            <label className="flex items-center gap-1.5 cursor-pointer group">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter group-hover:text-indigo-500 transition-colors">
+                Ver Todas
+              </span>
+              <div 
+                onClick={() => setShowAllPhotos(!showAllPhotos)}
+                className={`w-6 h-3.5 rounded-full relative transition-colors ${showAllPhotos ? 'bg-indigo-500' : 'bg-slate-200'}`}
+              >
+                <div className={`absolute top-0.5 w-2.5 h-2.5 bg-white rounded-full transition-all ${showAllPhotos ? 'left-3' : 'left-0.5'}`} />
+              </div>
+            </label>
+          )}
+          {getSyncIndicator()}
+        </div>
       </div>
       {galleryPhotos.length === 0 ? (
         <div className="text-center p-4 text-slate-400 text-[10px] italic bg-slate-50 rounded-xl flex-1 flex items-center justify-center border border-slate-100">
