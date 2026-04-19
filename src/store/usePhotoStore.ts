@@ -10,6 +10,7 @@ interface PhotoStore {
   galleryPhotos: GalleryPhoto[];
   editingImageUrl: string | null;
   cloudSyncInitialized: boolean;
+  syncStatus: 'connecting' | 'synced' | 'error' | 'idle';
   
   setTemplates: (templates: PhotoTemplate[]) => void;
   setSelectedTemplate: (template: PhotoTemplate) => void;
@@ -32,6 +33,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   galleryPhotos: [],
   editingImageUrl: null,
   cloudSyncInitialized: false,
+  syncStatus: 'idle',
 
   setTemplates: (templates) => set({ templates }),
   setSelectedTemplate: (template) => set({ selectedTemplate: template }),
@@ -141,23 +143,27 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   initializeCloudSync: () => {
     if (get().cloudSyncInitialized) return;
     
-    // Mark as initialized IMMEDIATELY to prevent race conditions during async session fetch
-    set({ cloudSyncInitialized: true });
-
     // Listen to changes in the cloud table
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
       const user = session?.user;
       const machineId = user?.user_metadata?.kiosk_license?.hwid;
 
       if (!machineId) {
-        // If no machineId, we might want to allow re-initialization later if they log in
-        set({ cloudSyncInitialized: false });
+        set({ cloudSyncInitialized: false, syncStatus: 'idle' });
         return;
       }
 
+      if (get().cloudSyncInitialized) return;
+      set({ cloudSyncInitialized: true, syncStatus: 'connecting' });
+
+      console.log('📡 Cobertura Realtime activada para HWID:', machineId);
+
       // Use a unique channel ID to avoid "Subscription already exists" errors
-      const channelId = `gallery-sync-${machineId}-${Date.now()}`;
+      const channelId = `gallery-sync-${machineId}`;
       
+      // Clean up previous channel if any
+      supabase.removeChannel(supabase.channel(channelId));
+
       const channel = supabase
         .channel(channelId)
         .on(
@@ -169,51 +175,64 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             filter: `machine_id=eq.${machineId}`
           },
           async (payload) => {
-            console.log('🔥 LLEGÓ FOTO MAGICA (Realtime sync):', payload);
+            console.log('🔥 Cambios detectados en Galería Nube:', payload.eventType);
+            set({ syncStatus: 'connecting' });
             
-            const currentGallery = get().galleryPhotos;
-
             if (payload.eventType === 'INSERT') {
                const newRow = payload.new;
-               // Avoid blindly trusting we don't naturally have it if we generated it
-               const alreadyExists = currentGallery.some(p => p.id === newRow.id);
+               const currentGallery = get().galleryPhotos;
                
-               if (!alreadyExists) {
-                  const { data: { publicUrl } } = supabase.storage
-                    .from('gallery')
-                    .getPublicUrl(newRow.storage_path);
-                    
-                  const incomingPhoto: GalleryPhoto = {
-                    id: newRow.id,
-                    timestamp: new Date(newRow.created_at).getTime(),
-                    url: publicUrl,
-                    cloudPath: newRow.storage_path,
-                    templateId: newRow.template_id || 'default'
-                  };
-                  
-                  // Inject directly into UI
-                  set({ 
-                     galleryPhotos: [incomingPhoto, ...currentGallery].sort((a, b) => b.timestamp - a.timestamp) 
-                  });
+               // Avoid duplication if this session was the one that uploaded it
+               if (currentGallery.some(p => p.id === newRow.id)) {
+                 set({ syncStatus: 'synced' });
+                 return;
                }
+               
+               const { data: { publicUrl } } = supabase.storage
+                 .from('gallery')
+                 .getPublicUrl(newRow.storage_path);
+                 
+               const incomingPhoto: GalleryPhoto = {
+                 id: newRow.id,
+                 timestamp: new Date(newRow.created_at).getTime(),
+                 url: publicUrl,
+                 cloudPath: newRow.storage_path,
+                 templateId: newRow.template_id || 'default'
+               };
+               
+               // Instant UI Update
+               set((state) => ({ 
+                  galleryPhotos: [incomingPhoto, ...state.galleryPhotos].sort((a, b) => b.timestamp - a.timestamp),
+                  syncStatus: 'synced'
+               }));
             } 
             else if (payload.eventType === 'DELETE') {
                const oldRow = payload.old;
-               // Because we use REPLICA IDENTITY FULL, we get the whole row in payload.old
-               // If not, we might only get id. So we rely on id.
                if (oldRow && oldRow.id) {
                   set((state) => ({
                     galleryPhotos: state.galleryPhotos.filter(p => p.id !== oldRow.id),
-                    photos: state.photos.filter(p => p.id !== oldRow.id) // Purge from current canvas
+                    photos: state.photos.filter(p => p.id !== oldRow.id),
+                    syncStatus: 'synced'
                   }));
+               } else {
+                 set({ syncStatus: 'synced' });
                }
+            } else {
+              set({ syncStatus: 'synced' });
             }
-            
-            // Note: We don't call loadGalleryPhotos() anymore because it causes heavy reads
-            // and purges crops. We just patched the state directly.
           }
         )
-        .subscribe();
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Suscripción Realtime establecida');
+            // Al conectar, forzar una carga inicial para atrapar lo que nos perdimos
+            await get().loadGalleryPhotos();
+            set({ syncStatus: 'synced' });
+          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            console.error('❌ Canal Realtime cerrado o con error');
+            set({ syncStatus: 'error' });
+          }
+        });
     });
   }
 }));
