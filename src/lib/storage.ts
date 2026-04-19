@@ -79,13 +79,17 @@ export const savePhotoToGallery = async (photoUrl: string, templateId: string): 
 
         // Broadcast to other devices via Database Table
         // Note: We'll attempt to store template_id if the schema supports it
-        await supabase.from('kiosk_gallery_photos').insert({
+        const { error: insertError } = await supabase.from('kiosk_gallery_photos').insert({
           id: id, // Force PostgreSQL to use our exact Local Timestamp ID
           machine_id: machineId,
           storage_path: uploadData.path,
           template_id: templateId,
           created_at: new Date(timestamp).toISOString()
         });
+
+        if (insertError) {
+          console.error('❌ Error registrando foto en la DB. Posible columna template_id falta:', insertError);
+        }
       }
     }
   } catch (e) {

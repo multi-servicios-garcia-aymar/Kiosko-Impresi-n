@@ -1,7 +1,8 @@
 import React from 'react';
-import { Library, Edit2, Trash2 } from 'lucide-react';
+import { Library, Edit2, Trash2, Cloud, CloudOff, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { GalleryPhoto } from '../lib/storage';
 import { VirtuosoGrid } from 'react-virtuoso';
+import { usePhotoStore } from '../store/usePhotoStore';
 
 interface GalleryProps {
   galleryPhotos: GalleryPhoto[];
@@ -22,11 +23,45 @@ export const Gallery: React.FC<GalleryProps> = ({
   handleRemoveFromGalleryQueue,
   handleManualQuantityChange,
 }) => {
+  const syncStatus = usePhotoStore((state) => state.syncStatus);
+
+  const getSyncIndicator = () => {
+    switch (syncStatus) {
+      case 'connecting':
+        return (
+          <div className="flex items-center gap-1 text-[9px] text-amber-500 animate-pulse bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100">
+            <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Sincronizando...
+          </div>
+        );
+      case 'synced':
+        return (
+          <div className="flex items-center gap-1 text-[9px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">
+            <CheckCircle2 className="w-2.5 h-2.5" /> En la Nube
+          </div>
+        );
+      case 'error':
+        return (
+          <div className="flex items-center gap-1 text-[9px] text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full border border-red-100">
+            <CloudOff className="w-2.5 h-2.5" /> Error Sinc.
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center gap-1 text-[9px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">
+            <Cloud className="w-2.5 h-2.5" /> Solo Local
+          </div>
+        );
+    }
+  };
+
   return (
     <section className="flex flex-col min-h-[160px] flex-1 space-y-2 border-t border-slate-100 pt-4">
-      <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 shrink-0 flex items-center gap-1">
-        <Library className="w-3 h-3" /> 2. Tu Galería
-      </h2>
+      <div className="flex items-center justify-between shrink-0">
+        <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+          <Library className="w-3 h-3" /> 2. Tu Galería
+        </h2>
+        {getSyncIndicator()}
+      </div>
       {galleryPhotos.length === 0 ? (
         <div className="text-center p-4 text-slate-400 text-[10px] italic bg-slate-50 rounded-xl flex-1 flex items-center justify-center border border-slate-100">
           Las fotos que edites se guardarán aquí automáticamente.

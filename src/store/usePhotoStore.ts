@@ -95,7 +95,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   loadGalleryPhotos: async () => {
     try {
       const saved = await getSavedPhotos();
-      set({ galleryPhotos: saved });
+      set({ galleryPhotos: saved, syncStatus: 'synced' });
       
       // Auto-purge zombie photos from the current layout if they no longer exist in the DB,
       // and refresh their URLs just in case the stored ones were dead blob URLs.
