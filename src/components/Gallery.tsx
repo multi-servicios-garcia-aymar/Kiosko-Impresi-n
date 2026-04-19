@@ -1,6 +1,7 @@
 import React from 'react';
 import { Library, Edit2, Trash2 } from 'lucide-react';
 import { GalleryPhoto } from '../lib/storage';
+import { VirtuosoGrid } from 'react-virtuoso';
 
 interface GalleryProps {
   galleryPhotos: GalleryPhoto[];
@@ -31,13 +32,15 @@ export const Gallery: React.FC<GalleryProps> = ({
           Las fotos que edites se guardarán aquí automáticamente.
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto min-h-0 pr-1 custom-scrollbar">
-          <div className="grid grid-cols-3 gap-2">
-            {galleryPhotos.map((gp) => {
+        <div className="flex-1 min-h-0 pr-1">
+          <VirtuosoGrid
+            totalCount={galleryPhotos.length}
+            listClassName="grid grid-cols-3 gap-2"
+            itemContent={(index) => {
+              const gp = galleryPhotos[index];
               const quantity = getGalleryPhotoQuantity(gp.id);
               return (
                 <div
-                  key={gp.id}
                   className={`relative group rounded-lg overflow-hidden border aspect-square bg-slate-50 transition-colors ${
                     quantity > 0 ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 hover:border-indigo-300'
                   }`}
@@ -109,8 +112,8 @@ export const Gallery: React.FC<GalleryProps> = ({
                   </div>
                 </div>
               );
-            })}
-          </div>
+            }}
+          />
         </div>
       )}
     </section>

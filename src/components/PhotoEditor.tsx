@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import Cropper from 'react-easy-crop';
 import { motion } from 'motion/react';
 import { 
@@ -8,6 +8,9 @@ import {
   Move
 } from 'lucide-react';
 import { getCroppedImg } from '../lib/imageUtils';
+import { EDITOR_CONFIG } from '../constants/editor';
+import { useBgRemoval } from '../hooks/useBgRemoval';
+import { useEditorKeyboard } from '../hooks/useEditorKeyboard';
 
 interface PhotoEditorProps {
   photoUrl: string | null;
@@ -16,58 +19,28 @@ interface PhotoEditorProps {
   aspect?: number;
 }
 
-export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCancel, aspect = 3 / 4 }) => {
+export const PhotoEditor: React.FC<PhotoEditorProps> = ({ 
+  photoUrl, 
+  onSave, 
+  onCancel, 
+  aspect = EDITOR_CONFIG.ASPECT_RATIO 
+}) => {
   const [currentImage, setCurrentImage] = useState(photoUrl);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
-  const [isRemovingBg, setIsRemovingBg] = useState(false);
-  const [bgProgress, setBgProgress] = useState(0);
-  const [bgStatus, setBgStatus] = useState('');
-  const workerRef = useRef<Worker | null>(null);
+  
   const bgInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // Inicializar Web Worker
-    workerRef.current = new Worker(new URL('../workers/aiWorker.ts', import.meta.url), { type: 'module' });
-    return () => {
-      workerRef.current?.terminate();
-    };
-  }, []);
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent scrolling when using arrows in the editor
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-      }
+  const { isRemovingBg, bgProgress, bgStatus, removeBackground } = useBgRemoval();
 
-      const step = e.shiftKey ? 10 : 2; // Shift for faster movement
-      
-      switch (e.key) {
-        case 'ArrowUp':
-          setCrop(prev => ({ ...prev, y: prev.y - step }));
-          break;
-        case 'ArrowDown':
-          setCrop(prev => ({ ...prev, y: prev.y + step }));
-          break;
-        case 'ArrowLeft':
-          setCrop(prev => ({ ...prev, x: prev.x - step }));
-          break;
-        case 'ArrowRight':
-          setCrop(prev => ({ ...prev, x: prev.x + step }));
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const adjustCrop = (dx: number, dy: number) => {
+  const adjustCrop = useCallback((dx: number, dy: number) => {
     setCrop(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-  };
+  }, []);
+
+  useEditorKeyboard({ onMove: adjustCrop, enabled: !!currentImage });
 
   const [bgRemoved, setBgRemoved] = useState(false);
   const [bgColor, setBgColor] = useState('transparent');
@@ -92,37 +65,15 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
     if (bgRemoved) {
       setCurrentImage(photoUrl);
       setBgRemoved(false);
-      setBgProgress(0);
       return;
     }
 
-    if (!photoUrl || !workerRef.current) return;
+    if (!photoUrl) return;
 
-    setIsRemovingBg(true);
-    setBgProgress(0);
-    setBgStatus('Inicializando Motor de IA...');
-
-    workerRef.current.onmessage = (e) => {
-      const { type, data, error } = e.data;
-      
-      if (type === 'progress') {
-        const percent = Math.round((data.current / data.total) * 100);
-        setBgProgress(percent || 0);
-        setBgStatus(`Procesando (${data.key || 'modelo'})...`);
-      } else if (type === 'success') {
-        const url = URL.createObjectURL(data);
-        setCurrentImage(url);
-        setBgRemoved(true);
-        setIsRemovingBg(false);
-        setBgStatus('');
-      } else if (type === 'error') {
-        console.error("Error removing background:", error);
-        setIsRemovingBg(false);
-        setBgStatus('Error al procesar');
-      }
-    };
-
-    workerRef.current.postMessage({ photoUrl });
+    removeBackground(photoUrl, (processedUrl) => {
+      setCurrentImage(processedUrl);
+      setBgRemoved(true);
+    });
   };
 
   const handleBgImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,10 +120,10 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                  backgroundImage: bgImg 
                   ? `url(${bgImg})` 
                   : (bgColor === 'transparent' 
-                      ? 'linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%)' 
+                      ? EDITOR_CONFIG.CHECKERBOARD.PATTERN 
                       : 'none'),
-                 backgroundSize: bgImg ? 'cover' : '20px 20px',
-                 backgroundPosition: bgImg ? 'center' : '0 0, 0 10px, 10px -10px, -10px 0px',
+                 backgroundSize: bgImg ? 'cover' : EDITOR_CONFIG.CHECKERBOARD.SIZE,
+                 backgroundPosition: bgImg ? 'center' : EDITOR_CONFIG.CHECKERBOARD.POSITION,
                  backgroundRepeat: 'no-repeat'
                }}
              />
@@ -242,9 +193,9 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                   <input
                     type="range"
                     value={zoom}
-                    min={1}
-                    max={3}
-                    step={0.1}
+                    min={EDITOR_CONFIG.ZOOM.MIN}
+                    max={EDITOR_CONFIG.ZOOM.MAX}
+                    step={EDITOR_CONFIG.ZOOM.STEP}
                     aria-labelledby="Zoom"
                     onChange={(e) => setZoom(Number(e.target.value))}
                     className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
@@ -363,7 +314,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                     <Palette className="w-3 h-3" /> Color de Fondo
                   </label>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {bgColors.map((color) => (
+                    {EDITOR_CONFIG.PRESET_COLORS.map((color) => (
                       <button
                         key={color}
                         onClick={() => {
@@ -375,7 +326,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                         }`}
                         style={{ 
                           backgroundColor: color === 'transparent' ? '#fff' : color,
-                          backgroundImage: color === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)' : 'none',
+                          backgroundImage: color === 'transparent' ? EDITOR_CONFIG.CHECKERBOARD.PATTERN : 'none',
                           backgroundSize: color === 'transparent' ? '10px 10px' : 'auto',
                           backgroundPosition: color === 'transparent' ? '0 0, 0 5px, 5px -5px, -5px 0px' : '0% 0%'
                         }}
@@ -388,12 +339,12 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                       <button
                         onClick={() => colorInputRef.current?.click()}
                         className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-transform hover:scale-110 ${
-                          !bgColors.includes(bgColor) && bgColor !== 'transparent' && !bgImg ? 'border-indigo-600 scale-110 shadow-md' : 'border-slate-200 border-dashed'
+                          !EDITOR_CONFIG.PRESET_COLORS.includes(bgColor as any) && bgColor !== 'transparent' && !bgImg ? 'border-indigo-600 scale-110 shadow-md' : 'border-slate-200 border-dashed'
                         }`}
-                        style={{ backgroundColor: !bgColors.includes(bgColor) && !bgImg ? bgColor : '#fff' }}
+                        style={{ backgroundColor: !EDITOR_CONFIG.PRESET_COLORS.includes(bgColor as any) && !bgImg ? bgColor : '#fff' }}
                         title="Elegir otro color"
                       >
-                        {bgColors.includes(bgColor) || bgImg ? (
+                        {EDITOR_CONFIG.PRESET_COLORS.includes(bgColor as any) || bgImg ? (
                           <div className="w-full h-full rounded-full" style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }} />
                         ) : null}
                       </button>
