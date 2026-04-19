@@ -167,7 +167,8 @@ export const usePrintEngine = () => {
   };
 
   const handleSaveEditedPhoto = async (croppedImage: string) => {
-    const newPhoto = await addPhotoToGallery(croppedImage);
+    if (!templateId) return;
+    const newPhoto = await addPhotoToGallery(croppedImage, templateId);
     if (newPhoto) {
       handleAddFromGallery(newPhoto);
     }
@@ -380,7 +381,7 @@ export const usePrintEngine = () => {
     templates,
     selectedTemplate,
     photos,
-    galleryPhotos,
+    galleryPhotos: galleryPhotos.filter(p => !templateId || p.templateId === templateId),
     editingImageUrl,
     scale,
     appScale,

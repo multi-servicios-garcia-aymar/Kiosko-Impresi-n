@@ -6,10 +6,12 @@ export interface SavedPhoto {
   base64?: string;
   blob?: Blob; // Para compatibilidad con versiones de fotos anteriores
   timestamp: number;
+  templateId?: string; // Isolated module ownership
 }
 
 export interface GalleryPhoto extends SavedPhoto {
   url: string;
+  templateId: string; // Mandatory in gallery view
   cloudPath?: string; // Trazabilidad en la nube
 }
 
@@ -27,7 +29,7 @@ const base64ToBlob = async (base64: string): Promise<Blob> => {
   return await res.blob();
 };
 
-export const savePhotoToGallery = async (photoUrl: string): Promise<GalleryPhoto> => {
+export const savePhotoToGallery = async (photoUrl: string, templateId: string): Promise<GalleryPhoto> => {
   const id = Date.now().toString();
   const timestamp = Date.now();
   let responseBlob: Blob;
@@ -41,7 +43,7 @@ export const savePhotoToGallery = async (photoUrl: string): Promise<GalleryPhoto
 
   // 1. WEB LOCAL CACHE (Base64 into IndexedDB) - Instant UI Feedback
   const base64 = await blobToBase64(responseBlob);
-  const newPhoto: SavedPhoto = { id, base64, timestamp };
+  const newPhoto: SavedPhoto = { id, base64, timestamp, templateId };
   await set(`photo_${id}`, newPhoto);
   
   let finalUrl = base64;
@@ -76,10 +78,12 @@ export const savePhotoToGallery = async (photoUrl: string): Promise<GalleryPhoto
         finalUrl = publicUrl;
 
         // Broadcast to other devices via Database Table
+        // Note: We'll attempt to store template_id if the schema supports it
         await supabase.from('kiosk_gallery_photos').insert({
           id: id, // Force PostgreSQL to use our exact Local Timestamp ID
           machine_id: machineId,
           storage_path: uploadData.path,
+          template_id: templateId,
           created_at: new Date(timestamp).toISOString()
         });
       }
@@ -88,7 +92,7 @@ export const savePhotoToGallery = async (photoUrl: string): Promise<GalleryPhoto
     console.error('Cloud upload skipped (operating in offline local mode)', e);
   }
   
-  return { ...newPhoto, url: finalUrl, cloudPath };
+  return { ...newPhoto, url: finalUrl, cloudPath, templateId };
 };
 
 export const getSavedPhotos = async (): Promise<GalleryPhoto[]> => {
@@ -115,7 +119,8 @@ export const getSavedPhotos = async (): Promise<GalleryPhoto[]> => {
             id: cp.id,
             timestamp: new Date(cp.created_at).getTime(),
             url: publicUrl,
-            cloudPath: cp.storage_path
+            cloudPath: cp.storage_path,
+            templateId: cp.template_id || 'default'
           };
         });
       }
@@ -142,7 +147,7 @@ export const getSavedPhotos = async (): Promise<GalleryPhoto[]> => {
     }
 
     if (url) {
-      validPhotos.push({ ...p, url });
+      validPhotos.push({ ...p, url, templateId: p.templateId || 'default' });
     }
   }
 

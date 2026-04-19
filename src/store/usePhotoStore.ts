@@ -20,7 +20,7 @@ interface PhotoStore {
   loadPhotosForTemplate: (templateId: string) => void;
   savePhotosForTemplate: (templateId: string) => void;
   loadGalleryPhotos: () => Promise<void>;
-  addPhotoToGallery: (compressedUrl: string) => Promise<GalleryPhoto | undefined>;
+  addPhotoToGallery: (compressedUrl: string, templateId: string) => Promise<GalleryPhoto | undefined>;
   removePhotoFromGallery: (id: string, cloudPath?: string) => Promise<void>;
   initializeCloudSync: () => void;
 }
@@ -113,9 +113,9 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     }
   },
 
-  addPhotoToGallery: async (compressedUrl) => {
+  addPhotoToGallery: async (compressedUrl, templateId) => {
     try {
-      const newPhoto = await savePhotoToGallery(compressedUrl);
+      const newPhoto = await savePhotoToGallery(compressedUrl, templateId);
       const updated = await getSavedPhotos();
       set({ galleryPhotos: updated });
       return newPhoto;
@@ -187,7 +187,8 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                     id: newRow.id,
                     timestamp: new Date(newRow.created_at).getTime(),
                     url: publicUrl,
-                    cloudPath: newRow.storage_path
+                    cloudPath: newRow.storage_path,
+                    templateId: newRow.template_id || 'default'
                   };
                   
                   // Inject directly into UI
