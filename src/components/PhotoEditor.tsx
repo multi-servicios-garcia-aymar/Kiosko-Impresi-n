@@ -125,12 +125,16 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
           <div className="relative w-full h-[45vh] lg:flex-1 lg:h-auto bg-slate-900 shrink-0 overflow-hidden">
              {/* Permanent Background Layer (Always Behind) */}
              <div 
-               className="absolute inset-0 z-0"
+               className="absolute inset-0 z-0 bg-slate-900"
                style={{
                  backgroundColor: bgColor === 'transparent' ? 'transparent' : bgColor,
-                 backgroundImage: bgImg ? `url(${bgImg})` : (bgColor === 'transparent' ? 'linear-gradient(45deg, #1e293b 25%, transparent 25%), linear-gradient(-45deg, #1e293b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1e293b 75%), linear-gradient(-45deg, transparent 75%, #1e293b 75%)' : 'none'),
-                 backgroundSize: bgImg ? 'cover' : (bgColor === 'transparent' ? '20px 20px' : 'auto'),
-                 backgroundPosition: bgImg ? 'center' : (bgColor === 'transparent' ? '0 0, 0 10px, 10px -10px, -10px 0px' : 'center'),
+                 backgroundImage: bgImg 
+                  ? `url(${bgImg})` 
+                  : (bgColor === 'transparent' 
+                      ? 'linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%)' 
+                      : 'none'),
+                 backgroundSize: bgImg ? 'cover' : '20px 20px',
+                 backgroundPosition: bgImg ? 'center' : '0 0, 0 10px, 10px -10px, -10px 0px',
                  backgroundRepeat: 'no-repeat'
                }}
              />
@@ -155,10 +159,8 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                     backgroundColor: 'transparent',
                   },
                   cropAreaStyle: {
-                    // This creates a subtle hint that the background is transparent
-                    backgroundImage: bgColor === 'transparent' && !bgImg ? 'linear-gradient(45deg, #0f172a 25%, transparent 25%), linear-gradient(-45deg, #0f172a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #0f172a 75%), linear-gradient(-45deg, transparent 75%, #0f172a 75%)' : 'none',
-                    backgroundSize: '20px 20px',
-                    backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
+                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)', // Darken areas outside crop
+                    border: '1px solid rgba(255, 255, 255, 0.5)',
                   }
                 }}
               />
