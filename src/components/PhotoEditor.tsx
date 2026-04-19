@@ -1,7 +1,12 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { motion } from 'motion/react';
-import { Upload, ZoomIn, ZoomOut, Eraser, Image as ImageIcon, Check, X, RotateCcw, RotateCw, Palette, Trash2 } from 'lucide-react';
+import { 
+  Upload, ZoomIn, ZoomOut, Eraser, Image as ImageIcon, Check, X, 
+  RotateCcw, RotateCw, Palette, Trash2, 
+  ChevronUp, ChevronDown, ChevronLeft, ChevronRight,
+  Move
+} from 'lucide-react';
 import { getCroppedImg } from '../lib/imageUtils';
 
 interface PhotoEditorProps {
@@ -31,6 +36,39 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
       workerRef.current?.terminate();
     };
   }, []);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent scrolling when using arrows in the editor
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
+
+      const step = e.shiftKey ? 10 : 2; // Shift for faster movement
+      
+      switch (e.key) {
+        case 'ArrowUp':
+          setCrop(prev => ({ ...prev, y: prev.y - step }));
+          break;
+        case 'ArrowDown':
+          setCrop(prev => ({ ...prev, y: prev.y + step }));
+          break;
+        case 'ArrowLeft':
+          setCrop(prev => ({ ...prev, x: prev.x - step }));
+          break;
+        case 'ArrowRight':
+          setCrop(prev => ({ ...prev, x: prev.x + step }));
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const adjustCrop = (dx: number, dy: number) => {
+    setCrop(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+  };
+
   const [bgRemoved, setBgRemoved] = useState(false);
   const [bgColor, setBgColor] = useState('transparent');
   const [bgImg, setBgImg] = useState<string | null>(null);
@@ -227,7 +265,52 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
 
               <hr className="border-slate-100" />
 
-              {/* Rotation Control */}
+              {/* Precision Controls */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <Move className="w-3 h-3" /> Ajuste de Precisión
+                </label>
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => adjustCrop(0, -2)}
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                    title="Mover arriba"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => adjustCrop(-2, 0)}
+                      className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                      title="Mover izquierda"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <div className="w-10 h-10 rounded-full border-2 border-slate-100 bg-white flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                    </div>
+                    <button
+                      onClick={() => adjustCrop(2, 0)}
+                      className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                      title="Mover derecha"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => adjustCrop(0, 2)}
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                    title="Mover abajo"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 text-center italic">
+                  También puedes usar las flechas del teclado
+                </p>
+              </div>
+
+              <hr className="border-slate-100" />
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
                   Rotar
