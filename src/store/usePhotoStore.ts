@@ -175,11 +175,19 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             filter: `machine_id=eq.${machineId}`
           },
           async (payload) => {
-            console.log('🔥 Cambios detectados en Galería Nube:', payload.eventType);
+            console.log('🔥 Cambios detectados en Galería Nube:', payload.eventType, payload);
             set({ syncStatus: 'connecting' });
             
             if (payload.eventType === 'INSERT') {
                const newRow = payload.new;
+               
+               // Fallback: If payload is missing data (due to RLS or partial sync), re-fetch everything
+               if (!newRow || !newRow.id || !newRow.storage_path) {
+                 console.log('⚠️ Payload incompleto detectado, solicitando sincronización profunda...');
+                 await get().loadGalleryPhotos();
+                 return;
+               }
+
                const currentGallery = get().galleryPhotos;
                
                // Avoid duplication if this session was the one that uploaded it
