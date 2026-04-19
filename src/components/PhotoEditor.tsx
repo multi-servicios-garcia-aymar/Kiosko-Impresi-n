@@ -55,8 +55,6 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
       setCurrentImage(photoUrl);
       setBgRemoved(false);
       setBgProgress(0);
-      setBgColor('transparent');
-      setBgImg(null);
       return;
     }
 
@@ -124,7 +122,19 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
 
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-y-auto lg:overflow-hidden">
           {/* Cropper Area */}
-          <div className="relative w-full h-[45vh] lg:flex-1 lg:h-auto bg-slate-900 shrink-0">
+          <div className="relative w-full h-[45vh] lg:flex-1 lg:h-auto bg-slate-900 shrink-0 overflow-hidden">
+             {/* Permanent Background Layer (Always Behind) */}
+             <div 
+               className="absolute inset-0 z-0"
+               style={{
+                 backgroundColor: bgColor === 'transparent' ? 'transparent' : bgColor,
+                 backgroundImage: bgImg ? `url(${bgImg})` : (bgColor === 'transparent' ? 'linear-gradient(45deg, #1e293b 25%, transparent 25%), linear-gradient(-45deg, #1e293b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1e293b 75%), linear-gradient(-45deg, transparent 75%, #1e293b 75%)' : 'none'),
+                 backgroundSize: bgImg ? 'cover' : (bgColor === 'transparent' ? '20px 20px' : 'auto'),
+                 backgroundPosition: bgImg ? 'center' : (bgColor === 'transparent' ? '0 0, 0 10px, 10px -10px, -10px 0px' : 'center'),
+                 backgroundRepeat: 'no-repeat'
+               }}
+             />
+             
             {currentImage && (
               <Cropper
                 image={currentImage}
@@ -138,10 +148,8 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ photoUrl, onSave, onCa
                 onRotationChange={setRotation}
                 style={{
                   containerStyle: {
-                    backgroundColor: bgColor === 'transparent' && !bgImg ? '#0f172a' : bgColor,
-                    backgroundImage: bgImg ? `url(${bgImg})` : (bgColor === 'transparent' ? 'none' : 'none'),
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundColor: 'transparent', // Transparent to see our div behind
+                    backgroundImage: 'none',
                   }
                 }}
               />

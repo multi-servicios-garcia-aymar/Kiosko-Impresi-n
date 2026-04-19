@@ -139,22 +139,31 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   },
 
   initializeCloudSync: () => {
-    const state = get();
-    if (state.cloudSyncInitialized) return;
+    if (get().cloudSyncInitialized) return;
+    
+    // Mark as initialized IMMEDIATELY to prevent race conditions during async session fetch
+    set({ cloudSyncInitialized: true });
 
     // Listen to changes in the cloud table
     supabase.auth.getSession().then(({ data: { session } }) => {
       const user = session?.user;
       const machineId = user?.user_metadata?.kiosk_license?.hwid;
 
-      if (!machineId) return;
+      if (!machineId) {
+        // If no machineId, we might want to allow re-initialization later if they log in
+        set({ cloudSyncInitialized: false });
+        return;
+      }
 
+      // Use a unique channel ID to avoid "Subscription already exists" errors
+      const channelId = `gallery-sync-${machineId}-${Date.now()}`;
+      
       const channel = supabase
-        .channel('schema-db-changes')
+        .channel(channelId)
         .on(
           'postgres_changes',
           {
-            event: '*', // Listen to INSERT and DELETE
+            event: '*', 
             schema: 'public',
             table: 'kiosk_gallery_photos',
             filter: `machine_id=eq.${machineId}`
@@ -204,8 +213,6 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
           }
         )
         .subscribe();
-
-      set({ cloudSyncInitialized: true });
     });
   }
 }));
