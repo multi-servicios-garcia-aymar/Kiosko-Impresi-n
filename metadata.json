@@ -1,5 +1,7 @@
 {
-  "name": "Kiosko de Impresión Activación por Licencia (Aprobado para .Exe)",
-  "description": "Kiosko de Impresión Activación por Licencia (Aprobado para .Exe) 18/03/2026  01:50 AM - 100 % Funcional.\n\nLa activación de la licencia usará internet solo para la activación, el software en 100% Offline.",
-  "requestFramePermissions": []
+  "name": "Professional Photo Print Kiosk",
+  "description": "Una solución integral de grado empresarial para el procesamiento e impresión de fotografías. Incluye eliminación de fondo por IA, encuadre inteligente (smartcrop), gestión de licencias vía Supabase y exportación a PDF de alta fidelidad. Optimizado para entornos offline tras la activación.",
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
