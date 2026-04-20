@@ -47,7 +47,7 @@ export default function Dashboard() {
         {templates.map((template) => (
           <KioskButton
             key={template.id}
-            icon={template.id === 'carnet' || template.id === 'passport' ? User : ImageIcon}
+            icon={template.id === 'carnet' || template.id === 'passport' || template.id === 'carnet-plus' ? User : ImageIcon}
             label={template.name}
             color="bg-white"
             onClick={() => navigate(`/photo-print/${template.id}`)}

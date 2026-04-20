@@ -11,6 +11,7 @@ export interface PhotoTemplate {
   description: string;
   rotate?: number; // Optional rotation in degrees
   isCustom?: boolean;
+  layoutType?: 'grid' | 'hybrid-carnet-plus';
 }
 
 export interface PhotoData {
@@ -83,5 +84,19 @@ export const DEFAULT_TEMPLATES: PhotoTemplate[] = [
     cols: 1,
     rows: 1,
     description: '210 x 297 mm - Optimizado para A4'
+  },
+  {
+    id: 'carnet-plus',
+    name: 'Carnet Plus',
+    photoWidth: 40,
+    photoHeight: 30,
+    pageSize: 'A6',
+    pageWidth: 105,
+    pageHeight: 148.5,
+    cols: 2,
+    rows: 4, // Theoretical slots if it were a grid, but we'll use 5 slots total
+    description: '4 fotos carnet + 1 Ampliación Pro en A6',
+    layoutType: 'hybrid-carnet-plus',
+    rotate: 90
   }
 ];

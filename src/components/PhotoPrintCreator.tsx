@@ -176,13 +176,33 @@ export const PhotoPrintCreator: React.FC = () => {
                     {Array.from({ length: getPhotosPerPage() }).map((_, slotIndex) => {
                       const globalIndex = pageIndex * getPhotosPerPage() + slotIndex;
                       const slotPhoto = getPhotoForSlot(globalIndex);
+                      const isLarge = selectedTemplate.layoutType === 'hybrid-carnet-plus' && slotIndex === 4;
+                      
+                      // For Carnet Plus (Hybrid), we need to handle the large slot's dimensions carefully
+                      // when rotation is involved. The slot is 2 columns wide and ~2 rows high.
+                      const multiplier = 3.78;
+                      const isRotated = selectedTemplate.rotate === 90;
+                      
+                      let slotW_px = selectedTemplate.photoWidth * multiplier;
+                      let slotH_px = selectedTemplate.photoHeight * multiplier;
+                      
+                      if (isLarge) {
+                        const gapX = 12.5;
+                        const gapY = 7.125;
+                        const paddingY = 3.5625;
+                        const bigPhotoRowHeight = selectedTemplate.pageHeight - (paddingY * 2) - (selectedTemplate.photoHeight * 2) - (gapY * 2);
+                        
+                        slotW_px = (selectedTemplate.photoWidth * 2 + gapX) * multiplier;
+                        slotH_px = bigPhotoRowHeight * multiplier;
+                      }
+
                       return (
                         <div 
                           key={slotIndex}
-                          className="relative border border-dashed border-slate-200 overflow-hidden bg-slate-50"
+                          className={`relative border border-dashed border-slate-200 overflow-hidden bg-slate-50 ${isLarge ? 'col-span-2' : ''}`}
                           style={{
-                            width: `${selectedTemplate.photoWidth * 3.78}px`,
-                            height: `${selectedTemplate.photoHeight * 3.78}px`,
+                            width: `${slotW_px}px`,
+                            height: `${slotH_px}px`,
                           }}
                         >
                           {slotPhoto ? (
@@ -191,12 +211,12 @@ export const PhotoPrintCreator: React.FC = () => {
                               alt={`Foto para imprimir slot ${globalIndex + 1} - Formato ${selectedTemplate.name}`}
                               className="absolute pointer-events-none select-none"
                               style={{
-                                width: selectedTemplate.rotate ? `${selectedTemplate.photoHeight * 3.78}px` : '100%',
-                                height: selectedTemplate.rotate ? `${selectedTemplate.photoWidth * 3.78}px` : '100%',
+                                width: isRotated ? `${slotH_px}px` : `${slotW_px}px`,
+                                height: isRotated ? `${slotW_px}px` : `${slotH_px}px`,
                                 left: '50%',
                                 top: '50%',
-                                transform: `translate(-50%, -50%) ${selectedTemplate.rotate ? `rotate(${selectedTemplate.rotate}deg)` : ''} scale(${slotPhoto.zoom}) rotate(${slotPhoto.rotation}deg)`,
-                                objectFit: 'contain'
+                                transform: `translate(-50%, -50%) ${isRotated ? 'rotate(90deg)' : ''} scale(${slotPhoto.zoom}) rotate(${slotPhoto.rotation}deg)`,
+                                objectFit: isLarge ? 'cover' : 'contain'
                               }}
                             />
                           ) : (
@@ -243,17 +263,35 @@ export const PhotoPrintCreator: React.FC = () => {
             {Array.from({ length: getPhotosPerPage() }).map((_, slotIndex) => {
               const globalIndex = pageIndex * getPhotosPerPage() + slotIndex;
               const slotPhoto = getPhotoForSlot(globalIndex);
+              const isLarge = selectedTemplate.layoutType === 'hybrid-carnet-plus' && slotIndex === 4;
+              
+              const isRotated = selectedTemplate.rotate === 90;
+              let slotW_mm = selectedTemplate.photoWidth;
+              let slotH_mm = selectedTemplate.photoHeight;
+              
+              if (isLarge) {
+                const gapX = 12.5;
+                const gapY = 7.125;
+                const paddingY = 3.5625;
+                const bigPhotoRowHeight = selectedTemplate.pageHeight - (paddingY * 2) - (selectedTemplate.photoHeight * 2) - (gapY * 2);
+
+                slotW_mm = selectedTemplate.photoWidth * 2 + gapX;
+                slotH_mm = bigPhotoRowHeight;
+              }
+
               return (
-                <div key={slotIndex} className="print-photo-container overflow-hidden relative">
+                <div key={slotIndex} className={`print-photo-container overflow-hidden relative ${isLarge ? 'col-span-2' : ''}`}
+                  style={{ width: `${slotW_mm}mm`, height: `${slotH_mm}mm` }}
+                >
                   {slotPhoto && (
                     <img
                       src={slotPhoto.croppedUrl}
                       className="absolute left-1/2 top-1/2"
                       style={{
-                        width: selectedTemplate.rotate ? `${selectedTemplate.photoHeight}mm` : '100%',
-                        height: selectedTemplate.rotate ? `${selectedTemplate.photoWidth}mm` : '100%',
-                        transform: `translate(-50%, -50%) ${selectedTemplate.rotate ? `rotate(${selectedTemplate.rotate}deg)` : ''} scale(${slotPhoto.zoom}) rotate(${slotPhoto.rotation}deg)`,
-                        objectFit: 'contain'
+                        width: isRotated ? `${slotH_mm}mm` : `${slotW_mm}mm`,
+                        height: isRotated ? `${slotW_mm}mm` : `${slotH_mm}mm`,
+                        transform: `translate(-50%, -50%) ${isRotated ? 'rotate(90deg)' : ''} scale(${slotPhoto.zoom}) rotate(${slotPhoto.rotation}deg)`,
+                        objectFit: isLarge ? 'cover' : 'contain'
                       }}
                     />
                   )}
