@@ -119,16 +119,17 @@ export const getCroppedImg = async (
   }
 
   // 3. Draw the user's cropped foreground image
+  const { x, y, width, height } = pixelCrop;
   croppedCtx.drawImage(
     canvas,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
+    x,
+    y,
+    width,
+    height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    width,
+    height
   );
 
   return new Promise((resolve) => {

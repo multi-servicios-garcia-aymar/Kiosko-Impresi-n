@@ -177,18 +177,25 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
                 onCropComplete={onCropComplete}
                 onZoomChange={setZoom}
                 onRotationChange={setRotation}
+                zoomWithScroll={true}
+                showGrid={false}
                 style={{
                   containerStyle: {
                     backgroundColor: 'transparent', 
                     backgroundImage: 'none',
+                    zIndex: 1
                   },
                   mediaStyle: {
                     backgroundColor: 'transparent',
+                    touchAction: 'none'
                   },
                   cropAreaStyle: {
-                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)', // Darken areas outside crop
+                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)', 
                     border: '1px solid rgba(255, 255, 255, 0.5)',
                   }
+                }}
+                classes={{
+                  containerClassName: "touch-none"
                 }}
               />
             )}
