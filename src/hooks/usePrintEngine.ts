@@ -302,24 +302,15 @@ export const usePrintEngine = () => {
     const multiplier = 3.78;
     const layout = getLayoutDimensions(selectedTemplate);
 
+    // Robust conversion from mm strings (including repeat) to px
+    const convertUnits = (val: string) => {
+      return val.replace(/([\d.]+)mm/g, (_, mm) => `${parseFloat(mm) * multiplier}px`);
+    };
+
     return {
       display: 'grid',
-      gridTemplateColumns: layout.gridCols.split(' ').map(v => {
-        if (v.includes('repeat')) {
-           const count = parseInt(v.match(/\(([^,]+)/)?.[1] || '1');
-           const size = parseFloat(v.match(/,\s*([\d.]+)/)?.[1] || '0');
-           return `repeat(${count}, ${size * multiplier}px)`;
-        }
-        return (parseFloat(v) * multiplier) + 'px';
-      }).join(' '),
-      gridTemplateRows: layout.gridRows.split(' ').map(v => {
-        if (v.includes('repeat')) {
-           const count = parseInt(v.match(/\(([^,]+)/)?.[1] || '1');
-           const size = parseFloat(v.match(/,\s*([\d.]+)/)?.[1] || '0');
-           return `repeat(${count}, ${size * multiplier}px)`;
-        }
-        return (parseFloat(v) * multiplier) + 'px';
-      }).join(' '),
+      gridTemplateColumns: convertUnits(layout.gridCols),
+      gridTemplateRows: convertUnits(layout.gridRows),
       padding: `${layout.paddingY * multiplier}px ${layout.paddingX * multiplier}px`,
       columnGap: `${layout.gapX * multiplier}px`,
       rowGap: `${layout.gapY * multiplier}px`,
