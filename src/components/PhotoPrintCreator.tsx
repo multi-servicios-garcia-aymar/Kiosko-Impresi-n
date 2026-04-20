@@ -1,11 +1,14 @@
 import React from 'react';
-import { Upload, Printer } from 'lucide-react';
+import { Upload, Printer, FileDown } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { PhotoEditor } from './PhotoEditor';
 import { Gallery } from './Gallery';
 import { SEO } from './SEO';
 import { TemplateNav } from './TemplateNav';
 import { usePrintEngine } from '../hooks/usePrintEngine';
+import { getLayoutDimensions } from '../lib/layouts';
+import { generatePDF } from '../lib/pdfUtils';
+import { useState } from 'react';
 
 export const PhotoPrintCreator: React.FC = () => {
   const {
@@ -42,6 +45,24 @@ export const PhotoPrintCreator: React.FC = () => {
     showAllPhotos,
     setShowAllPhotos
   } = usePrintEngine();
+
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      await generatePDF(
+        'photo-print-container', 
+        `Impresion_${selectedTemplate.name}_${new Date().toLocaleDateString()}`,
+        selectedTemplate.pageWidth,
+        selectedTemplate.pageHeight
+      );
+    } catch (e) {
+      console.error('PDF generation fails', e);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   return (
     <div ref={wrapperRef} className="w-full h-full flex flex-col items-center justify-start overflow-y-auto lg:overflow-hidden print:overflow-visible bg-slate-50 print:bg-white print:block">
@@ -130,6 +151,22 @@ export const PhotoPrintCreator: React.FC = () => {
               </span>
             </div>
             <button
+              onClick={handleDownloadPDF}
+              disabled={photos.length === 0 || isGeneratingPDF}
+              className={`w-full py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all border ${
+                photos.length > 0 && !isGeneratingPDF
+                  ? 'border-indigo-200 text-indigo-600 hover:bg-white hover:shadow-sm'
+                  : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
+              }`}
+            >
+              {isGeneratingPDF ? (
+                <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FileDown className="w-3.5 h-3.5" />
+              )}
+              {isGeneratingPDF ? 'Generando...' : 'Descargar PDF'}
+            </button>
+            <button
               onClick={handlePrint}
               disabled={photos.length === 0}
               className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-md ${
@@ -176,24 +213,14 @@ export const PhotoPrintCreator: React.FC = () => {
                     {Array.from({ length: getPhotosPerPage() }).map((_, slotIndex) => {
                       const globalIndex = pageIndex * getPhotosPerPage() + slotIndex;
                       const slotPhoto = getPhotoForSlot(globalIndex);
-                      const isLarge = selectedTemplate.layoutType === 'hybrid-carnet-plus' && slotIndex === 4;
+                      const layout = getLayoutDimensions(selectedTemplate);
+                      const slot = layout.slotStyles(slotIndex);
                       
-                      // For Carnet Plus (Hybrid), we need to handle the large slot's dimensions carefully
-                      // when rotation is involved. The slot is 2 columns wide and ~2 rows high.
                       const multiplier = 3.78;
                       const isRotated = selectedTemplate.rotate === 90;
                       
-                      let slotW_px = selectedTemplate.photoWidth * multiplier;
-                      let slotH_px = selectedTemplate.photoHeight * multiplier;
-                      
-                      if (isLarge) {
-                        const gapX = (selectedTemplate.pageWidth - (selectedTemplate.photoWidth * 2)) / 3;
-                        const gapY = (selectedTemplate.pageHeight - (selectedTemplate.photoHeight * 4)) / 5;
-                        const bigPhotoRowHeight = selectedTemplate.photoHeight * 2 + gapY;
-                        
-                        slotW_px = (selectedTemplate.photoWidth * 2 + gapX) * multiplier;
-                        slotH_px = bigPhotoRowHeight * multiplier;
-                      }
+                      const slotW_px = slot.width * multiplier;
+                      const slotH_px = slot.height * multiplier;
 
                       return (
                         <div 
@@ -202,7 +229,7 @@ export const PhotoPrintCreator: React.FC = () => {
                           style={{
                             width: `${slotW_px}px`,
                             height: `${slotH_px}px`,
-                            gridColumn: isLarge ? '1 / 3' : 'auto',
+                            gridColumn: slot.gridColumn || 'auto',
                           }}
                         >
                           {slotPhoto ? (
@@ -216,7 +243,7 @@ export const PhotoPrintCreator: React.FC = () => {
                                 left: '50%',
                                 top: '50%',
                                 transform: `translate(-50%, -50%) ${isRotated ? 'rotate(90deg)' : ''} scale(${slotPhoto.zoom}) rotate(${slotPhoto.rotation}deg)`,
-                                objectFit: isLarge ? 'cover' : 'contain'
+                                objectFit: slot.isLarge ? 'cover' : 'contain'
                               }}
                             />
                           ) : (
@@ -263,27 +290,19 @@ export const PhotoPrintCreator: React.FC = () => {
             {Array.from({ length: getPhotosPerPage() }).map((_, slotIndex) => {
               const globalIndex = pageIndex * getPhotosPerPage() + slotIndex;
               const slotPhoto = getPhotoForSlot(globalIndex);
-              const isLarge = selectedTemplate.layoutType === 'hybrid-carnet-plus' && slotIndex === 4;
+              const layout = getLayoutDimensions(selectedTemplate);
+              const slot = layout.slotStyles(slotIndex);
               
               const isRotated = selectedTemplate.rotate === 90;
-              let slotW_mm = selectedTemplate.photoWidth;
-              let slotH_mm = selectedTemplate.photoHeight;
-              
-              if (isLarge) {
-                const gapX = (selectedTemplate.pageWidth - (selectedTemplate.photoWidth * 2)) / 3;
-                const gapY = (selectedTemplate.pageHeight - (selectedTemplate.photoHeight * 4)) / 5;
-                const bigPhotoRowHeight = selectedTemplate.photoHeight * 2 + gapY;
-
-                slotW_mm = selectedTemplate.photoWidth * 2 + gapX;
-                slotH_mm = bigPhotoRowHeight;
-              }
+              const slotW_mm = slot.width;
+              const slotH_mm = slot.height;
 
               return (
                 <div key={slotIndex} className="print-photo-container overflow-hidden relative"
                   style={{ 
                     width: `${slotW_mm}mm`, 
                     height: `${slotH_mm}mm`,
-                    gridColumn: isLarge ? '1 / 3' : 'auto',
+                    gridColumn: slot.gridColumn || 'auto',
                     boxSizing: 'border-box'
                   }}
                 >
@@ -295,7 +314,7 @@ export const PhotoPrintCreator: React.FC = () => {
                         width: isRotated ? `${slotH_mm}mm` : `${slotW_mm}mm`,
                         height: isRotated ? `${slotW_mm}mm` : `${slotH_mm}mm`,
                         transform: `translate(-50%, -50%) ${isRotated ? 'rotate(90deg)' : ''} scale(${slotPhoto.zoom}) rotate(${slotPhoto.rotation}deg)`,
-                        objectFit: isLarge ? 'cover' : 'contain'
+                        objectFit: slot.isLarge ? 'cover' : 'contain'
                       }}
                     />
                   )}

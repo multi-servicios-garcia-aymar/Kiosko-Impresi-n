@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { GalleryPhoto } from '../lib/storage';
-import { PhotoData, DEFAULT_TEMPLATES } from '../types/photo';
+import { PhotoData, DEFAULT_TEMPLATES, PhotoTemplate } from '../types/photo';
 import { compressImage } from '../lib/imageUtils';
+import { getLayoutDimensions } from '../lib/layouts';
 
 export const usePrintEngine = () => {
   const { templateId } = useParams<{ templateId: string }>();
@@ -282,107 +283,48 @@ export const usePrintEngine = () => {
 
   // Styles logic
   const getPrintGridCSS = () => {
-    if (selectedTemplate.layoutType === 'hybrid-carnet-plus') {
-      const paddingX = (selectedTemplate.pageWidth - (selectedTemplate.photoWidth * 2)) / 3;
-      const gapX = paddingX; 
-      const paddingY = (selectedTemplate.pageHeight - (selectedTemplate.photoHeight * 4)) / 5;
-      const gapY = paddingY;
-      const bigPhotoRowHeight = selectedTemplate.photoHeight * 2 + gapY;
-
-      return `
-        display: grid !important;
-        grid-template-columns: ${selectedTemplate.photoWidth}mm ${selectedTemplate.photoWidth}mm !important;
-        grid-template-rows: ${selectedTemplate.photoHeight}mm ${selectedTemplate.photoHeight}mm ${bigPhotoRowHeight}mm !important;
-        padding: ${paddingY}mm ${paddingX}mm !important;
-        column-gap: ${gapX}mm !important;
-        row-gap: ${gapY}mm !important;
-        justify-content: start !important;
-        align-content: start !important;
-        box-sizing: border-box !important;
-      `;
-    }
-
-    if (selectedTemplate.id === 'carnet') {
-      const remainingWidth = selectedTemplate.pageWidth - (selectedTemplate.cols * selectedTemplate.photoWidth);
-      const paddingX = remainingWidth / (2 * selectedTemplate.cols);
-      const gapX = paddingX * 2;
-
-      const remainingHeight = selectedTemplate.pageHeight - (selectedTemplate.rows * selectedTemplate.photoHeight);
-      const paddingY = remainingHeight / (2 * selectedTemplate.rows);
-      const gapY = paddingY * 2;
-
-      return `
-        display: grid !important;
-        grid-template-columns: repeat(${selectedTemplate.cols}, ${selectedTemplate.photoWidth}mm) !important;
-        grid-template-rows: repeat(${selectedTemplate.rows}, ${selectedTemplate.photoHeight}mm) !important;
-        padding: ${paddingY}mm ${paddingX}mm !important;
-        column-gap: ${gapX}mm !important;
-        row-gap: ${gapY}mm !important;
-        justify-content: start !important;
-        align-content: start !important;
-        box-sizing: border-box !important;
-      `;
-    }
+    const layout = getLayoutDimensions(selectedTemplate);
 
     return `
       display: grid !important;
-      grid-template-columns: repeat(${selectedTemplate.cols}, ${selectedTemplate.photoWidth}mm) !important;
-      grid-template-rows: repeat(${selectedTemplate.rows}, ${selectedTemplate.photoHeight}mm) !important;
-      justify-content: space-evenly !important;
-      align-content: space-evenly !important;
-      gap: 0 !important;
+      grid-template-columns: ${layout.gridCols} !important;
+      grid-template-rows: ${layout.gridRows} !important;
+      padding: ${layout.paddingY}mm ${layout.paddingX}mm !important;
+      column-gap: ${layout.gapX}mm !important;
+      row-gap: ${layout.gapY}mm !important;
+      justify-content: ${layout.justifyContent || 'start'} !important;
+      align-content: ${layout.alignContent || 'start'} !important;
       box-sizing: border-box !important;
     `;
   };
 
   const getPreviewGridStyles = (): React.CSSProperties => {
     const multiplier = 3.78;
-
-    if (selectedTemplate.layoutType === 'hybrid-carnet-plus') {
-      const paddingX = (selectedTemplate.pageWidth - (selectedTemplate.photoWidth * 2)) / 3;
-      const gapX = paddingX;
-      const paddingY = (selectedTemplate.pageHeight - (selectedTemplate.photoHeight * 4)) / 5;
-      const gapY = paddingY;
-      const bigPhotoRowHeight = selectedTemplate.photoHeight * 2 + gapY;
-
-      return {
-        display: 'grid',
-        gridTemplateColumns: `${selectedTemplate.photoWidth * multiplier}px ${selectedTemplate.photoWidth * multiplier}px`,
-        gridTemplateRows: `${selectedTemplate.photoHeight * multiplier}px ${selectedTemplate.photoHeight * multiplier}px ${bigPhotoRowHeight * multiplier}px`,
-        padding: `${paddingY * multiplier}px ${paddingX * multiplier}px`,
-        columnGap: `${gapX * multiplier}px`,
-        rowGap: `${gapY * multiplier}px`,
-        justifyContent: 'start',
-        alignContent: 'start',
-      };
-    }
-
-    if (selectedTemplate.id === 'carnet') {
-      const remainingWidth = selectedTemplate.pageWidth - (selectedTemplate.cols * selectedTemplate.photoWidth);
-      const paddingX = remainingWidth / (2 * selectedTemplate.cols);
-      const gapX = paddingX * 2;
-      const remainingHeight = selectedTemplate.pageHeight - (selectedTemplate.rows * selectedTemplate.photoHeight);
-      const paddingY = remainingHeight / (2 * selectedTemplate.rows);
-      const gapY = paddingY * 2;
-
-      return {
-        display: 'grid',
-        gridTemplateColumns: `repeat(${selectedTemplate.cols}, ${selectedTemplate.photoWidth * multiplier}px)`,
-        gridTemplateRows: `repeat(${selectedTemplate.rows}, ${selectedTemplate.photoHeight * multiplier}px)`,
-        padding: `${paddingY * multiplier}px ${paddingX * multiplier}px`,
-        columnGap: `${gapX * multiplier}px`,
-        rowGap: `${gapY * multiplier}px`,
-        justifyContent: 'start',
-        alignContent: 'start',
-      };
-    }
+    const layout = getLayoutDimensions(selectedTemplate);
 
     return {
       display: 'grid',
-      gridTemplateColumns: `repeat(${selectedTemplate.cols}, ${selectedTemplate.photoWidth * multiplier}px)`,
-      gridTemplateRows: `repeat(${selectedTemplate.rows}, ${selectedTemplate.photoHeight * multiplier}px)`,
-      justifyContent: 'space-evenly',
-      alignContent: 'space-evenly',
+      gridTemplateColumns: layout.gridCols.split(' ').map(v => {
+        if (v.includes('repeat')) {
+           const count = parseInt(v.match(/\(([^,]+)/)?.[1] || '1');
+           const size = parseFloat(v.match(/,\s*([\d.]+)/)?.[1] || '0');
+           return `repeat(${count}, ${size * multiplier}px)`;
+        }
+        return (parseFloat(v) * multiplier) + 'px';
+      }).join(' '),
+      gridTemplateRows: layout.gridRows.split(' ').map(v => {
+        if (v.includes('repeat')) {
+           const count = parseInt(v.match(/\(([^,]+)/)?.[1] || '1');
+           const size = parseFloat(v.match(/,\s*([\d.]+)/)?.[1] || '0');
+           return `repeat(${count}, ${size * multiplier}px)`;
+        }
+        return (parseFloat(v) * multiplier) + 'px';
+      }).join(' '),
+      padding: `${layout.paddingY * multiplier}px ${layout.paddingX * multiplier}px`,
+      columnGap: `${layout.gapX * multiplier}px`,
+      rowGap: `${layout.gapY * multiplier}px`,
+      justifyContent: (layout.justifyContent as any) || 'start',
+      alignContent: (layout.alignContent as any) || 'start',
     };
   };
 

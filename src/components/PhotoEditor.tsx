@@ -5,12 +5,13 @@ import {
   Upload, ZoomIn, ZoomOut, Eraser, Image as ImageIcon, Check, X, 
   RotateCcw, RotateCw, Palette, Trash2, 
   ChevronUp, ChevronDown, ChevronLeft, ChevronRight,
-  Move
+  Move, Sparkles
 } from 'lucide-react';
 import { getCroppedImg } from '../lib/imageUtils';
 import { EDITOR_CONFIG } from '../constants/editor';
 import { useBgRemoval } from '../hooks/useBgRemoval';
 import { useEditorKeyboard } from '../hooks/useEditorKeyboard';
+import smartcrop from 'smartcrop';
 
 interface PhotoEditorProps {
   photoUrl: string | null;
@@ -85,6 +86,43 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
     }
     // Reset file input
     if (bgInputRef.current) bgInputRef.current.value = '';
+  };
+
+  const [isSmartCropping, setIsSmartCropping] = useState(false);
+
+  const handleSmartCrop = async () => {
+    if (!currentImage) return;
+    setIsSmartCropping(true);
+    
+    try {
+      const img = new Image();
+      img.src = currentImage;
+      await new Promise((resolve) => { img.onload = resolve; });
+      
+      const result = await smartcrop.crop(img, { width: 100, height: 100 / aspect });
+      
+      if (result && result.topCrop) {
+        const { x, y, width, height } = result.topCrop;
+        
+        // Calculate new crop and zoom
+        // Note: react-easy-crop uses percentages and zoom factors
+        const zoomX = img.width / width;
+        const zoomY = img.height / height;
+        const newZoom = Math.max(zoomX, zoomY);
+        
+        // Approximation for centering based on smartcrop result
+        // react-easy-crop coordinates are centered (0,0 is center)
+        const centerX = (x + width / 2) / img.width * 100 - 50;
+        const centerY = (y + height / 2) / img.height * 100 - 50;
+        
+        setZoom(newZoom);
+        setCrop({ x: -centerX * newZoom, y: -centerY * newZoom });
+      }
+    } catch (e) {
+      console.error('Smart crop error', e);
+    } finally {
+      setIsSmartCropping(false);
+    }
   };
 
   const bgColors = [
@@ -286,23 +324,42 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
 
               <hr className="border-slate-100" />
 
-              {/* Background Removal */}
+              {/* AI Tools */}
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
-                  Fondo Inteligente
+                  Herramientas IA
                 </label>
-                <button
-                  onClick={handleRemoveBg}
-                  disabled={isRemovingBg}
-                  className={`w-full py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-all ${
-                    bgRemoved 
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' 
-                      : 'bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100'
-                  }`}
-                >
-                  <Eraser className="w-4 h-4" />
-                  {bgRemoved ? 'Restaurar Fondo Original' : 'Eliminar Fondo (IA)'}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handleSmartCrop}
+                    disabled={isSmartCropping}
+                    className="w-full py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-white hover:shadow-sm"
+                  >
+                    {isSmartCropping ? (
+                      <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    {isSmartCropping ? 'Analizando...' : 'Auto-Ajustar Encuadre'}
+                  </button>
+
+                  <button
+                    onClick={handleRemoveBg}
+                    disabled={isRemovingBg}
+                    className={`w-full py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-all ${
+                      bgRemoved 
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' 
+                        : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-white'
+                    }`}
+                  >
+                    {isRemovingBg ? (
+                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Eraser className="w-4 h-4" />
+                    )}
+                    {isRemovingBg ? 'Procesando...' : (bgRemoved ? 'Restaurar Fondo Original' : 'Eliminar Fondo (IA)')}
+                  </button>
+                </div>
               </div>
 
               {/* Background Replacement */}
