@@ -202,7 +202,7 @@ export const PhotoPrintCreator: React.FC = () => {
                           style={{
                             width: `${slotW_px}px`,
                             height: `${slotH_px}px`,
-                            gridColumn: isLarge ? 'span 2' : 'auto',
+                            gridColumn: isLarge ? '1 / 3' : 'auto',
                           }}
                         >
                           {slotPhoto ? (
@@ -283,7 +283,7 @@ export const PhotoPrintCreator: React.FC = () => {
                   style={{ 
                     width: `${slotW_mm}mm`, 
                     height: `${slotH_mm}mm`,
-                    gridColumn: isLarge ? 'span 2' : 'auto',
+                    gridColumn: isLarge ? '1 / 3' : 'auto',
                     boxSizing: 'border-box'
                   }}
                 >

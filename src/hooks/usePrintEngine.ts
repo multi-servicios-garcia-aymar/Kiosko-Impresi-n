@@ -413,8 +413,6 @@ export const usePrintEngine = () => {
         break-after: auto;
       }
       .print-photo-container {
-        width: ${selectedTemplate.photoWidth}mm !important;
-        height: ${selectedTemplate.photoHeight}mm !important;
         page-break-inside: avoid;
         box-sizing: border-box !important;
         position: relative !important;
