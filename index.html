@@ -18,6 +18,11 @@
     
     <meta name="author" content="Nexo Network Ec" />
     <meta name="robots" content="index, follow" />
+
+    <!-- Cache Control: Avoid stale application state -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon.svg" />
@@ -32,11 +37,45 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Global Error Handler for hashed assets
+      // If a script load fails (404 on old hash), force a cache-free reload
+      window.addEventListener('error', function(e) {
+        if (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK') {
+          console.warn('Recurso no encontrado, forzando recarga de actualización...');
+          window.location.reload();
+        }
+      }, true);
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker registrado:', reg))
+            .then(reg => {
+              console.log('Service Worker registrado');
+              
+              // Detect new service worker versions
+              reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === 'installed') {
+                    if (navigator.serviceWorker.controller) {
+                      // New content is available, inform the user or reload
+                      console.log('Nueva versión disponible, recargando...');
+                      window.location.reload();
+                    }
+                  }
+                };
+              };
+            })
             .catch(err => console.log('Fallo al registrar Service Worker:', err));
+        });
+
+        // Controller change detection
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            window.location.reload();
+            refreshing = true;
+          }
         });
       }
     </script>
