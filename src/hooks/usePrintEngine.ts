@@ -283,11 +283,11 @@ export const usePrintEngine = () => {
   // Styles logic
   const getPrintGridCSS = () => {
     if (selectedTemplate.layoutType === 'hybrid-carnet-plus') {
-      const paddingX = 6.25; // Exact margin from 'carnet'
-      const gapX = 12.5; // Exact gap from 'carnet'
-      const paddingY = 3.5625; // Exact top margin from 'carnet'
-      const gapY = 7.125; // Exact row gap from 'carnet'
-      const bigPhotoRowHeight = selectedTemplate.pageHeight - (paddingY * 2) - (selectedTemplate.photoHeight * 2) - (gapY * 2);
+      const paddingX = (selectedTemplate.pageWidth - (selectedTemplate.photoWidth * 2)) / 3;
+      const gapX = paddingX; 
+      const paddingY = (selectedTemplate.pageHeight - (selectedTemplate.photoHeight * 4)) / 5;
+      const gapY = paddingY;
+      const bigPhotoRowHeight = selectedTemplate.photoHeight * 2 + gapY;
 
       return `
         display: grid !important;
@@ -339,11 +339,11 @@ export const usePrintEngine = () => {
     const multiplier = 3.78;
 
     if (selectedTemplate.layoutType === 'hybrid-carnet-plus') {
-      const paddingX = 6.25;
-      const gapX = 12.5;
-      const paddingY = 3.5625;
-      const gapY = 7.125;
-      const bigPhotoRowHeight = selectedTemplate.pageHeight - (paddingY * 2) - (selectedTemplate.photoHeight * 2) - (gapY * 2);
+      const paddingX = (selectedTemplate.pageWidth - (selectedTemplate.photoWidth * 2)) / 3;
+      const gapX = paddingX;
+      const paddingY = (selectedTemplate.pageHeight - (selectedTemplate.photoHeight * 4)) / 5;
+      const gapY = paddingY;
+      const bigPhotoRowHeight = selectedTemplate.photoHeight * 2 + gapY;
 
       return {
         display: 'grid',

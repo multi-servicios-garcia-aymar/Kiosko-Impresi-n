@@ -187,10 +187,9 @@ export const PhotoPrintCreator: React.FC = () => {
                       let slotH_px = selectedTemplate.photoHeight * multiplier;
                       
                       if (isLarge) {
-                        const gapX = 12.5;
-                        const gapY = 7.125;
-                        const paddingY = 3.5625;
-                        const bigPhotoRowHeight = selectedTemplate.pageHeight - (paddingY * 2) - (selectedTemplate.photoHeight * 2) - (gapY * 2);
+                        const gapX = (selectedTemplate.pageWidth - (selectedTemplate.photoWidth * 2)) / 3;
+                        const gapY = (selectedTemplate.pageHeight - (selectedTemplate.photoHeight * 4)) / 5;
+                        const bigPhotoRowHeight = selectedTemplate.photoHeight * 2 + gapY;
                         
                         slotW_px = (selectedTemplate.photoWidth * 2 + gapX) * multiplier;
                         slotH_px = bigPhotoRowHeight * multiplier;
@@ -199,10 +198,11 @@ export const PhotoPrintCreator: React.FC = () => {
                       return (
                         <div 
                           key={slotIndex}
-                          className={`relative border border-dashed border-slate-200 overflow-hidden bg-slate-50 ${isLarge ? 'col-span-2' : ''}`}
+                          className={`relative border border-dashed border-slate-200 overflow-hidden bg-slate-50`}
                           style={{
                             width: `${slotW_px}px`,
                             height: `${slotH_px}px`,
+                            gridColumn: isLarge ? 'span 2' : 'auto',
                           }}
                         >
                           {slotPhoto ? (
@@ -270,18 +270,22 @@ export const PhotoPrintCreator: React.FC = () => {
               let slotH_mm = selectedTemplate.photoHeight;
               
               if (isLarge) {
-                const gapX = 12.5;
-                const gapY = 7.125;
-                const paddingY = 3.5625;
-                const bigPhotoRowHeight = selectedTemplate.pageHeight - (paddingY * 2) - (selectedTemplate.photoHeight * 2) - (gapY * 2);
+                const gapX = (selectedTemplate.pageWidth - (selectedTemplate.photoWidth * 2)) / 3;
+                const gapY = (selectedTemplate.pageHeight - (selectedTemplate.photoHeight * 4)) / 5;
+                const bigPhotoRowHeight = selectedTemplate.photoHeight * 2 + gapY;
 
                 slotW_mm = selectedTemplate.photoWidth * 2 + gapX;
                 slotH_mm = bigPhotoRowHeight;
               }
 
               return (
-                <div key={slotIndex} className={`print-photo-container overflow-hidden relative ${isLarge ? 'col-span-2' : ''}`}
-                  style={{ width: `${slotW_mm}mm`, height: `${slotH_mm}mm` }}
+                <div key={slotIndex} className="print-photo-container overflow-hidden relative"
+                  style={{ 
+                    width: `${slotW_mm}mm`, 
+                    height: `${slotH_mm}mm`,
+                    gridColumn: isLarge ? 'span 2' : 'auto',
+                    boxSizing: 'border-box'
+                  }}
                 >
                   {slotPhoto && (
                     <img
