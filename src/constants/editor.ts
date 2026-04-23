@@ -5,9 +5,9 @@
 
 export const EDITOR_CONFIG = {
   ZOOM: {
-    MIN: 1,
-    MAX: 3,
-    STEP: 0.1,
+    MIN: 0.1,
+    MAX: 5,
+    STEP: 0.05,
     PRECISION_STEP: 2,
     FAST_STEP: 10,
   },

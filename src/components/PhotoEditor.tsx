@@ -178,6 +178,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
                 onZoomChange={setZoom}
                 onRotationChange={setRotation}
                 zoomWithScroll={true}
+                restrictPosition={false}
                 showGrid={false}
                 style={{
                   containerStyle: {
@@ -228,7 +229,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
                 </label>
                 <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => setZoom(prev => Math.max(1, prev - 0.1))}
+                    onClick={() => setZoom(prev => Math.max(EDITOR_CONFIG.ZOOM.MIN, prev - 0.1))}
                     className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                     title="Alejar"
                     aria-label="Alejar foto"
@@ -246,7 +247,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
                     className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                   />
                   <button 
-                    onClick={() => setZoom(prev => Math.min(3, prev + 0.1))}
+                    onClick={() => setZoom(prev => Math.min(EDITOR_CONFIG.ZOOM.MAX, prev + 0.1))}
                     className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                     title="Acercar"
                     aria-label="Acercar foto"
