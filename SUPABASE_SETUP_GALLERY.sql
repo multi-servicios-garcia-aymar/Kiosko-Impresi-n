@@ -17,7 +17,11 @@ DROP POLICY IF EXISTS "Authenticated users can delete from gallery bucket" ON st
 -- 1. Create User Profiles Table (Extended Auth)
 create table public.profiles (
     id uuid references auth.users on delete cascade primary key,
+    email text,
+    full_name text,
+    avatar_url text,
     is_super_admin boolean default false,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -28,19 +32,46 @@ create policy "Users can view their own profile"
     on public.profiles for select 
     using (auth.uid() = id);
 
--- 2. Trigger: Automatically create profile on User Signup
+-- 2. Trigger: Automatically create profile on User Signup with full metadata
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id)
-  values (new.id);
+  insert into public.profiles (id, email, full_name, avatar_url)
+  values (
+    new.id, 
+    new.email, 
+    new.raw_user_meta_data->>'full_name', 
+    new.raw_user_meta_data->>'avatar_url'
+  )
+  on conflict (id) do update set
+    email = excluded.email,
+    full_name = excluded.full_name,
+    avatar_url = excluded.avatar_url,
+    updated_at = now();
   return new;
 end;
 $$ language plpgsql security definer;
 
-create or replace trigger on_auth_user_created
+-- Remove existing trigger if it exists to avoid duplication
+drop trigger if exists on_auth_user_created on auth.users;
+
+create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- 2.1 Retroactive Sync: Create/Update profiles for existing users with full data
+insert into public.profiles (id, email, full_name, avatar_url, created_at)
+select 
+  id, 
+  email, 
+  raw_user_meta_data->>'full_name', 
+  raw_user_meta_data->>'avatar_url',
+  created_at
+from auth.users
+on conflict (id) do update set
+  email = excluded.email,
+  full_name = excluded.full_name,
+  avatar_url = excluded.avatar_url;
 
 -- 3. Create the Storage Bucket for the Gallery System
 insert into storage.buckets (id, name, public) 
@@ -61,6 +92,12 @@ ALTER TABLE public.kiosk_gallery_photos REPLICA IDENTITY FULL;
 -- 5. Turn on Realtime for the table (Idempotent)
 DO $$
 BEGIN
+    -- Ensure the publication exists
+    IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        CREATE PUBLICATION supabase_realtime;
+    END IF;
+
+    -- Add the table to the publication if not already present
     IF NOT EXISTS (
         SELECT 1
         FROM pg_publication_tables

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { PhotoTemplate, PhotoData, DEFAULT_TEMPLATES } from '../types/photo';
 import { GalleryPhoto, getSavedPhotos, savePhotoToGallery, deleteSavedPhoto } from '../lib/storage';
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from './useAuthStore';
 
 interface PhotoStore {
   templates: PhotoTemplate[];
@@ -147,12 +148,19 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   initializeCloudSync: () => {
     if (get().cloudSyncInitialized) return;
     
+    let activeChannel: any = null;
+    let retryTimeout: any = null;
+
     // Listen to changes in the cloud table
     supabase.auth.onAuthStateChange(async (event, session) => {
       const user = session?.user;
       const machineId = user?.user_metadata?.kiosk_license?.hwid;
 
       if (!machineId) {
+        if (activeChannel) {
+          supabase.removeChannel(activeChannel);
+          activeChannel = null;
+        }
         set({ cloudSyncInitialized: false, syncStatus: 'idle' });
         return;
       }
@@ -162,19 +170,24 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
       console.log('📡 Cobertura Realtime activada para HWID:', machineId);
 
-      // Use a unique channel ID to avoid "Subscription already exists" errors
-      const channelId = `gallery-sync-${machineId}`;
-      
       const setupChannel = (attempt = 0) => {
-        if (attempt > 5) {
+        if (attempt > 10) { // Increased tolerance
           console.error('❌ Máximo de reintentos Realtime alcanzado.');
           set({ syncStatus: 'error' });
           return;
         }
 
-        // Clean up previous channel if any
-        supabase.removeChannel(supabase.channel(channelId));
+        // Clean up previous channel properly
+        if (activeChannel) {
+          supabase.removeChannel(activeChannel);
+          activeChannel = null;
+        }
 
+        if (retryTimeout) clearTimeout(retryTimeout);
+
+        // Unique channel ID for this attempt/machine
+        const channelId = `gallery-sync-${machineId}-${Date.now()}`;
+        
         const channel = supabase
           .channel(channelId)
           .on(
@@ -187,30 +200,21 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             },
             async (payload) => {
               console.log('🔥 Cambios detectados en Galería Nube:', payload.eventType, payload);
-              set({ syncStatus: 'connecting' });
-              
+              // Optimistic or deep sync
               if (payload.eventType === 'INSERT') {
                  const newRow = payload.new;
-                 
-                 // Fallback: If payload is missing data (due to RLS or partial sync), re-fetch everything
                  if (!newRow || !newRow.id || !newRow.storage_path) {
-                   console.log('⚠️ Payload incompleto detectado, solicitando sincronización profunda...');
                    await get().loadGalleryPhotos();
                    return;
                  }
 
                  const currentGallery = get().galleryPhotos;
-                 
-                 // Avoid duplication if this session was the one that uploaded it
-                 if (currentGallery.some(p => p.id === newRow.id)) {
-                   set({ syncStatus: 'synced' });
-                   return;
-                 }
+                 if (currentGallery.some(p => p.id === newRow.id)) return;
                  
                  const { data: { publicUrl } } = supabase.storage
                    .from('gallery')
                    .getPublicUrl(newRow.storage_path);
-                   
+                    
                  const incomingPhoto: GalleryPhoto = {
                    id: newRow.id,
                    timestamp: new Date(newRow.created_at).getTime(),
@@ -219,7 +223,6 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                    templateId: newRow.template_id || 'default'
                  };
                  
-                 // Instant UI Update
                  set((state) => ({ 
                     galleryPhotos: [incomingPhoto, ...state.galleryPhotos].sort((a, b) => b.timestamp - a.timestamp),
                     syncStatus: 'synced'
@@ -234,29 +237,45 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                       syncStatus: 'synced'
                     }));
                  } else {
-                   set({ syncStatus: 'synced' });
+                   await get().loadGalleryPhotos();
                  }
               } else {
-                set({ syncStatus: 'synced' });
+                await get().loadGalleryPhotos();
               }
             }
-          )
-          .subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-              console.log('✅ Suscripción Realtime establecida');
-              // Al conectar, forzar una carga inicial para atrapar lo que nos perdimos
-              await get().loadGalleryPhotos();
-              set({ syncStatus: 'synced' });
-            } else if (status === 'CLOSED') {
-              console.warn('⚠️ Canal Realtime cerrado, reintentando...');
-              setTimeout(() => setupChannel(attempt + 1), 2000);
-            } else if (status === 'CHANNEL_ERROR') {
-              console.error('❌ Error crítico en canal Realtime');
-              set({ syncStatus: 'error' });
-              // Reintentar tras error con delay exponencial
-              setTimeout(() => setupChannel(attempt + 1), 5000 * (attempt + 1));
+          );
+
+        activeChannel = channel;
+
+        channel.subscribe(async (status, err) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Suscripción Realtime establecida');
+            await get().loadGalleryPhotos();
+            set({ syncStatus: 'synced' });
+          } 
+          else if (status === 'CLOSED') {
+            console.warn('⚠️ Canal Realtime cerrado.');
+            // Only retry if we still have a machineId
+            const currentMachine = getAuthMachineId();
+            if (currentMachine === machineId) {
+              retryTimeout = setTimeout(() => setupChannel(attempt + 1), 3000);
             }
-          });
+          } 
+          else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error(`❌ Error en canal Realtime (${status}):`, err?.message || 'Sin detalles');
+            set({ syncStatus: 'error' });
+            
+            // Exponental backoff for retries
+            const backoff = Math.min(30000, 5000 * Math.pow(1.5, attempt));
+            retryTimeout = setTimeout(() => setupChannel(attempt + 1), backoff);
+          }
+        });
+      };
+
+      // Helper to check current machine id safely
+      const getAuthMachineId = () => {
+        const { user } = useAuthStore.getState();
+        return user?.user_metadata?.kiosk_license?.hwid;
       };
 
       setupChannel();
