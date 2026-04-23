@@ -4,7 +4,10 @@ import { supabase } from '../lib/supabase';
 export interface KioskAd {
   id: string;
   title: string;
+  description?: string;
   image_url: string;
+  cta_text?: string;
+  cta_url?: string;
   is_active: boolean;
   display_duration: number;
   target_machine_id: string | null;

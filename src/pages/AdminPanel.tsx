@@ -8,7 +8,9 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAdStore, KioskAd } from '../store/useAdStore';
+import { AdModal } from '../components/AdModal';
 import { Navigate } from 'react-router-dom';
+import { AnimatePresence } from 'motion/react';
 
 const AdminPanel: React.FC = () => {
   const { profile, isLoading: isAuthLoading } = useAuthStore();
@@ -21,7 +23,7 @@ const AdminPanel: React.FC = () => {
     activeToday: 0
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [isUploadingAd, setIsUploadingAd] = useState(false);
+  const [showAdModal, setShowAdModal] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -62,49 +64,9 @@ const AdminPanel: React.FC = () => {
     fetchAds();
   }, [fetchAds]);
 
-  const handleCreateAd = async () => {
-    const title = prompt('Título del anuncio:');
-    if (!title) return;
-
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.onchange = async (e: any) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      setIsUploadingAd(true);
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `ad_${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('ads')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('ads')
-          .getPublicUrl(filePath);
-
-        await createAd({
-          title,
-          image_url: publicUrl,
-          is_active: true,
-          display_duration: 5000
-        });
-        
-        alert('Anuncio creado satisfactoriamente');
-      } catch (err) {
-        console.error('Error uploading ad:', err);
-        alert('Error al subir el anuncio.');
-      } finally {
-        setIsUploadingAd(false);
-      }
-    };
-    fileInput.click();
+  const handleCreateAd = async (adData: Partial<KioskAd>) => {
+    await createAd(adData);
+    setShowAdModal(false);
   };
 
   if (isAuthLoading) return null;
@@ -255,18 +217,13 @@ const AdminPanel: React.FC = () => {
                 <h2 className="text-xl font-bold text-slate-900">Gestión de Publicidad</h2>
                 <p className="text-sm text-slate-500">Configura los banners que verán tus usuarios en los kioskos.</p>
               </div>
-              <button 
-                onClick={handleCreateAd}
-                disabled={isUploadingAd}
-                className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-              >
-                {isUploadingAd ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4" />
-                )}
-                Nuevo Anuncio
-              </button>
+            <button 
+              onClick={() => setShowAdModal(true)}
+              className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo Anuncio
+            </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -286,11 +243,12 @@ const AdminPanel: React.FC = () => {
                     layoutId={ad.id}
                     className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group"
                   >
-                    <div className="aspect-video bg-slate-100 relative overflow-hidden">
+                    <div className="aspect-video bg-slate-900 relative overflow-hidden flex items-center justify-center">
+                      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
                       <img 
                         src={ad.image_url} 
                         alt={ad.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="max-w-full max-h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-2 right-2">
                         <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${ad.is_active ? 'bg-emerald-500 text-white' : 'bg-slate-400 text-white'}`}>
@@ -356,6 +314,15 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      <AnimatePresence>
+        {showAdModal && (
+          <AdModal 
+            onClose={() => setShowAdModal(false)} 
+            onSave={handleCreateAd} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

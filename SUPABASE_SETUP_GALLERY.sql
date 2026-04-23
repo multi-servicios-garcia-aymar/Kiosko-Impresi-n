@@ -4,103 +4,114 @@
 -- Instrucciones: 
 -- Copia y pega ESTE CÓDIGO en el SQL Editor de tu Dashboard de Supabase 
 -- y ejecútalo (Run) para crear la infraestructura completa.
+-- Este script es IDEMPOTENTE y SEGURO: puedes ejecutarlo varias veces 
+-- sin perder datos y sin errores.
 -- ==============================================================================
 
--- 0. CLEANUP (Idempotent approach)
--- Destruimos las tablas viejas y las políticas antiguas para evitar colisiones
-DROP TABLE IF EXISTS public.kiosk_gallery_photos CASCADE;
-DROP TABLE IF EXISTS public.profiles CASCADE;
+-- 0. CLEANUP (Idempotent approach - Policies only)
+-- Borramos las políticas para recrearlas con la versión más reciente sin fallar
 DROP POLICY IF EXISTS "Public view access for Gallery bucket" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can upload to gallery bucket" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete from gallery bucket" ON storage.objects;
+DROP POLICY IF EXISTS "Public view access for Ads bucket" ON storage.objects;
+DROP POLICY IF EXISTS "SuperAdmins can manage ads bucket" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Authenticated users can manage gallery" ON public.kiosk_gallery_photos;
+DROP POLICY IF EXISTS "Everyone can view active ads" ON public.kiosk_ads;
+DROP POLICY IF EXISTS "SuperAdmins can manage ads" ON public.kiosk_ads;
 
 -- 1. Create User Profiles Table (Extended Auth)
-create table public.profiles (
-    id uuid references auth.users on delete cascade primary key,
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
     email text,
     full_name text,
     avatar_url text,
-    is_super_admin boolean default false,
-    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+    is_super_admin boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Turn on RLS for profiles
-alter table public.profiles enable row level security;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-create policy "Users can view their own profile" 
-    on public.profiles for select 
-    using (auth.uid() = id);
+CREATE POLICY "Users can view their own profile" 
+    ON public.profiles FOR SELECT 
+    USING (auth.uid() = id);
 
 -- 2. Trigger: Automatically create profile on User Signup with full metadata
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, email, full_name, avatar_url)
-  values (
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, avatar_url)
+  VALUES (
     new.id, 
     new.email, 
     new.raw_user_meta_data->>'full_name', 
     new.raw_user_meta_data->>'avatar_url'
   )
-  on conflict (id) do update set
+  ON CONFLICT (id) DO UPDATE SET
     email = excluded.email,
     full_name = excluded.full_name,
     avatar_url = excluded.avatar_url,
     updated_at = now();
-  return new;
-end;
-$$ language plpgsql security definer;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Remove existing trigger if it exists to avoid duplication
-drop trigger if exists on_auth_user_created on auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- 2.1 Retroactive Sync: Create/Update profiles for existing users with full data
-insert into public.profiles (id, email, full_name, avatar_url, created_at)
-select 
+INSERT INTO public.profiles (id, email, full_name, avatar_url, created_at)
+SELECT 
   id, 
   email, 
   raw_user_meta_data->>'full_name', 
   raw_user_meta_data->>'avatar_url',
   created_at
-from auth.users
-on conflict (id) do update set
+FROM auth.users
+ON CONFLICT (id) DO UPDATE SET
   email = excluded.email,
   full_name = excluded.full_name,
   avatar_url = excluded.avatar_url;
 
 -- 3. Create the Storage Buckets
-insert into storage.buckets (id, name, public) 
-values ('gallery', 'gallery', true), ('ads', 'ads', true)
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('gallery', 'gallery', true), ('ads', 'ads', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- 4. Create the Tables
 
 -- 4.1 Gallery Table
-create table public.kiosk_gallery_photos (
-    id text primary key,           
-    user_id uuid references auth.users(id) on delete cascade,
-    machine_id text not null,      
-    storage_path text not null,    
+CREATE TABLE IF NOT EXISTS public.kiosk_gallery_photos (
+    id text PRIMARY KEY,           
+    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    machine_id text NOT null,      
+    storage_path text NOT null,    
     template_id text,              
-    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 4.2 Advertising Table
-create table public.kiosk_ads (
-    id uuid default gen_random_uuid() primary key,
-    title text not null,
-    image_url text not null,
-    is_active boolean default true,
-    display_duration integer default 5000, -- in ms
-    target_machine_id text, -- optional: only for specific kiosks
-    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- 4.2 Advertising Table (With auto-migration Support)
+CREATE TABLE IF NOT EXISTS public.kiosk_ads (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    title text NOT null,
+    image_url text NOT null,
+    is_active boolean DEFAULT true,
+    display_duration integer DEFAULT 5000, -- in ms
+    target_machine_id text,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Ensure newer columns exist for existing databases
+ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS cta_text text;
+ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS cta_url text;
 
 -- Turn on REPLICA IDENTITY FULL for Realtime Deletes
 ALTER TABLE public.kiosk_gallery_photos REPLICA IDENTITY FULL;
@@ -131,42 +142,42 @@ BEGIN
 END $$;
 
 -- 6. Set up Row Level Security (RLS)
-alter table public.kiosk_gallery_photos enable row level security;
-alter table public.kiosk_ads enable row level security;
+ALTER TABLE public.kiosk_gallery_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.kiosk_ads ENABLE ROW LEVEL SECURITY;
 
 -- Gallery RLS
-create policy "Authenticated users can manage gallery"
-    on public.kiosk_gallery_photos for all
-    using (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can manage gallery"
+    ON public.kiosk_gallery_photos FOR ALL
+    USING (auth.role() = 'authenticated');
 
 -- Ads RLS
-create policy "Everyone can view active ads"
-    on public.kiosk_ads for select
-    using (is_active = true);
+CREATE POLICY "Everyone can view active ads"
+    ON public.kiosk_ads FOR SELECT
+    USING (is_active = true);
 
-create policy "SuperAdmins can manage ads"
-    on public.kiosk_ads for all
-    using (exists (select 1 from public.profiles where id = auth.uid() and is_super_admin = true));
+CREATE POLICY "SuperAdmins can manage ads"
+    ON public.kiosk_ads FOR ALL
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));
 
 -- 7. Set up Security Policies for Storage
 -- GALLERY
-create policy "Public view access for Gallery bucket"
-    on storage.objects for select
-    using ( bucket_id = 'gallery' );
+CREATE POLICY "Public view access for Gallery bucket"
+    ON storage.objects FOR SELECT
+    USING ( bucket_id = 'gallery' );
 
-create policy "Authenticated users can upload to gallery bucket"
-    on storage.objects for insert
-    with check ( bucket_id = 'gallery' and auth.role() = 'authenticated' );
+CREATE POLICY "Authenticated users can upload to gallery bucket"
+    ON storage.objects FOR INSERT
+    WITH CHECK ( bucket_id = 'gallery' AND auth.role() = 'authenticated' );
 
-create policy "Authenticated users can delete from gallery bucket"
-    on storage.objects for delete
-    using ( bucket_id = 'gallery' and auth.role() = 'authenticated' );
+CREATE POLICY "Authenticated users can delete from gallery bucket"
+    ON storage.objects FOR DELETE
+    USING ( bucket_id = 'gallery' AND auth.role() = 'authenticated' );
 
 -- ADS
-create policy "Public view access for Ads bucket"
-    on storage.objects for select
-    using ( bucket_id = 'ads' );
+CREATE POLICY "Public view access for Ads bucket"
+    ON storage.objects FOR SELECT
+    USING ( bucket_id = 'ads' );
 
-create policy "SuperAdmins can manage ads bucket"
-    on storage.objects for all
-    using ( bucket_id = 'ads' and exists (select 1 from public.profiles where id = auth.uid() and is_super_admin = true));
+CREATE POLICY "SuperAdmins can manage ads bucket"
+    ON storage.objects FOR ALL
+    USING ( bucket_id = 'ads' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));

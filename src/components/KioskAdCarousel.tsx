@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { ExternalLink } from 'lucide-react';
 import { useAdStore } from '../store/useAdStore';
 import { useLicense } from '../context/LicenseContext';
 
@@ -43,12 +44,34 @@ export const KioskAdCarousel: React.FC = () => {
           <img
             src={ads[currentIndex]?.image_url}
             alt={ads[currentIndex]?.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-900/60 to-transparent">
-            <h3 className="text-white font-bold text-lg md:text-xl drop-shadow-md">
-              {ads[currentIndex]?.title}
-            </h3>
+          <div className="absolute inset-0 -z-10 bg-slate-900/5 backdrop-blur-3xl" />
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-900/90 via-slate-900/60 to-transparent flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex-1 text-left">
+              <h3 className="text-white font-bold text-lg md:text-2xl drop-shadow-md mb-1">
+                {ads[currentIndex]?.title}
+              </h3>
+              {ads[currentIndex]?.description && (
+                <p className="text-slate-200 text-sm md:text-base line-clamp-2 max-w-xl">
+                  {ads[currentIndex].description}
+                </p>
+              )}
+            </div>
+            
+            {ads[currentIndex]?.cta_text && ads[currentIndex]?.cta_url && (
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href={ads[currentIndex].cta_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm md:text-base shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 whitespace-nowrap hover:bg-indigo-700 transition-colors"
+              >
+                {ads[currentIndex].cta_text}
+                <ExternalLink className="w-4 h-4" />
+              </motion.a>
+            )}
           </div>
         </motion.div>
       </AnimatePresence>

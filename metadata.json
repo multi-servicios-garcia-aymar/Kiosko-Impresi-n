@@ -1,6 +1,6 @@
 {
-  "name": "Professional Photo Print Kiosk",
-  "description": "Una solución integral de grado empresarial para el procesamiento e impresión de fotografías. Incluye eliminación de fondo por IA, encuadre inteligente (smartcrop), gestión de licencias vía Supabase y exportación a PDF de alta fidelidad. Optimizado para entornos offline tras la activación.",
+  "name": "Nexo Kiosko Fotos",
+  "description": "Nexo Network Ec presents: La solución definitiva para kioskos de impresión fotográfica. Procesamiento con IA, eliminación de fondos, SmartCrop, publicidad interactiva y gestión centralizada vía Supabase.",
   "requestFramePermissions": [
     "camera"
   ]
