@@ -254,7 +254,8 @@ export const usePrintEngine = () => {
 
   const handleDeleteGalleryPhoto = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await removePhotoFromGallery(id);
+    const photo = galleryPhotos.find(p => p.id === id);
+    await removePhotoFromGallery(id, photo?.cloudPath);
   };
 
   // Math helpers

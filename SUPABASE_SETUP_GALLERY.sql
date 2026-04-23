@@ -81,8 +81,10 @@ ON CONFLICT (id) DO NOTHING;
 -- 4. Create the Cloud Gallery Table
 create table public.kiosk_gallery_photos (
     id text primary key,           -- Text ID to match local Date.now() timestamp ID perfectly
+    user_id uuid references auth.users(id) on delete cascade, -- Link to user
     machine_id text not null,      -- Stores the license/machine ID grouping
     storage_path text not null,    -- Path inside the bucket
+    template_id text,              -- Link to template used
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

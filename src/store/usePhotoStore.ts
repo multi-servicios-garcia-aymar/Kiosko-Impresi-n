@@ -133,15 +133,25 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   },
 
   removePhotoFromGallery: async (id, cloudPath) => {
+    set({ syncStatus: 'connecting' });
     try {
       await deleteSavedPhoto(id, cloudPath);
+      // Success, refresh from local only to avoid deep sync if not needed
       const updated = await getSavedPhotos();
       set((state) => ({ 
         galleryPhotos: updated,
-        photos: state.photos.filter(p => p.id !== id) // Remove from active print queue!
+        photos: state.photos.filter(p => p.id !== id),
+        syncStatus: 'synced'
       }));
     } catch (e) {
       console.error('Failed to delete photo from gallery', e);
+      set({ syncStatus: 'error' });
+      // Still remove locally to keep UI consistent
+      const updated = await getSavedPhotos();
+      set((state) => ({ 
+        galleryPhotos: updated,
+        photos: state.photos.filter(p => p.id !== id)
+      }));
     }
   },
 

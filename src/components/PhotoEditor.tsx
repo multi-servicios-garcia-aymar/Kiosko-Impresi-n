@@ -51,14 +51,23 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleSave = async () => {
-    if (currentImage && croppedAreaPixels) {
-      try {
-        const croppedImage = await getCroppedImg(currentImage, croppedAreaPixels, rotation, bgColor, bgImg || undefined);
-        onSave(croppedImage);
-      } catch (e) {
-        console.error(e);
-      }
+    if (!currentImage || !croppedAreaPixels) {
+      console.warn('Cannot save: Missing image or crop data');
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      const croppedImage = await getCroppedImg(currentImage, croppedAreaPixels, rotation, bgColor, bgImg || undefined);
+      onSave(croppedImage);
+    } catch (e) {
+      console.error('Error cropping image:', e);
+      alert('Error al procesar la imagen. Por favor intenta de nuevo.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -476,10 +485,17 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
           </button>
           <button
             onClick={handleSave}
-            className="px-6 py-2 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
+            disabled={isSaving || !currentImage}
+            className={`px-6 py-2 rounded-xl bg-indigo-600 text-white font-medium transition-colors flex items-center gap-2 shadow-sm ${
+              isSaving || !currentImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'
+            }`}
           >
-            <Check className="w-4 h-4" />
-            Aplicar Foto
+            {isSaving ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Check className="w-4 h-4" />
+            )}
+            {isSaving ? 'Procesando...' : 'Aplicar Foto'}
           </button>
         </div>
       </div>
