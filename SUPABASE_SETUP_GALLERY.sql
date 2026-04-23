@@ -112,6 +112,11 @@ CREATE TABLE IF NOT EXISTS public.kiosk_ads (
 ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS description text;
 ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS cta_text text;
 ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS cta_url text;
+ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS target_audience text DEFAULT 'all'; -- all, registered, anonymous, trial
+ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS placement text DEFAULT 'carousel'; -- carousel, sidebar, overlay
+ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS display_mode text DEFAULT 'fade';
+ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS priority integer DEFAULT 0;
+ALTER TABLE public.kiosk_ads ADD COLUMN IF NOT EXISTS media_items jsonb DEFAULT '[]'::jsonb;
 
 -- Turn on REPLICA IDENTITY FULL for Realtime Deletes
 ALTER TABLE public.kiosk_gallery_photos REPLICA IDENTITY FULL;

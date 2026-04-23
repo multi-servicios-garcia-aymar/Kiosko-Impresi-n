@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { logger } from '../services/loggerService';
+import { logger } from '../services/LoggerService';
 
 export const useBgRemoval = () => {
   const [isRemovingBg, setIsRemovingBg] = useState(false);

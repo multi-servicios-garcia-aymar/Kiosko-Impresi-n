@@ -1,74 +1,150 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Volume2, VolumeX } from 'lucide-react';
 import { useAdStore } from '../store/useAdStore';
 import { useLicense } from '../context/LicenseContext';
+import { useAdTargeting } from '../hooks/useAdTargeting';
 
 export const KioskAdCarousel: React.FC = () => {
-  const { ads, fetchAds, initializeAdSync } = useAdStore();
+  const { fetchAds, initializeAdSync } = useAdStore();
   const { license } = useLicense();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const machineId = license?.id || 'global';
+    const machineId = license?.hardwareId || 'global';
     fetchAds(machineId);
     initializeAdSync(machineId);
   }, [fetchAds, initializeAdSync, license]);
 
-  useEffect(() => {
-    if (ads.length <= 1) return;
+  const filteredAds = useAdTargeting({ placement: 'carousel' });
 
-    const currentAd = ads[currentIndex];
-    const duration = currentAd?.display_duration || 5000;
+  const activeAd = filteredAds[currentIndex];
+  const mediaItems = useMemo(() => {
+    if (activeAd?.media_items && activeAd.media_items.length > 0) {
+      return activeAd.media_items;
+    }
+    // Fallback if no media_items but has image_url
+    return [{ url: activeAd?.image_url, type: 'image' }] as any[];
+  }, [activeAd]);
+
+  const activeMedia = mediaItems[activeMediaIndex];
+
+  useEffect(() => {
+    if (filteredAds.length === 0) return;
+
+    const duration = activeMedia?.duration || activeAd?.display_duration || 5000;
 
     const timer = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % ads.length);
+      if (mediaItems.length > 1 && activeMediaIndex < mediaItems.length - 1) {
+        setActiveMediaIndex(prev => prev + 1);
+      } else {
+        setActiveMediaIndex(0);
+        setCurrentIndex((prev) => (prev + 1) % filteredAds.length);
+      }
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [ads, currentIndex]);
+  }, [filteredAds, currentIndex, activeMediaIndex, mediaItems, activeMedia, activeAd]);
 
-  if (ads.length === 0) return null;
+  // Reset internal media index when changing main ad
+  useEffect(() => {
+    setActiveMediaIndex(0);
+  }, [currentIndex]);
+
+  if (filteredAds.length === 0) return null;
+
+  const getVariants = (mode: string) => {
+    switch (mode) {
+      case 'slide':
+        return {
+          initial: { opacity: 0, x: 100 },
+          animate: { opacity: 1, x: 0 },
+          exit: { opacity: 0, x: -100 }
+        };
+      case 'zoom':
+        return {
+          initial: { opacity: 0, scale: 0.8 },
+          animate: { opacity: 1, scale: 1 },
+          exit: { opacity: 0, scale: 1.2 }
+        };
+      case 'fade':
+      default:
+        return {
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          exit: { opacity: 0 }
+        };
+    }
+  };
+
+  const variants = getVariants(activeAd?.display_mode || 'fade');
 
   return (
-    <div className="w-full h-48 md:h-64 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-100/50 mb-12 relative bg-slate-100">
+    <div className="w-full h-48 md:h-64 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-100/50 mb-12 relative bg-slate-100 group">
       <AnimatePresence mode="wait">
         <motion.div
-          key={ads[currentIndex]?.id}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
+          key={`${activeAd?.id}-${activeMediaIndex}`}
+          initial={variants.initial}
+          animate={variants.animate}
+          exit={variants.exit}
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="absolute inset-0"
         >
-          <img
-            src={ads[currentIndex]?.image_url}
-            alt={ads[currentIndex]?.title}
-            className="w-full h-full object-contain"
-          />
+          {activeMedia?.type === 'video' ? (
+            <div className="w-full h-full relative">
+              <video
+                ref={videoRef}
+                src={activeMedia.url}
+                autoPlay
+                muted={isMuted}
+                loop
+                playsInline
+                className="w-full h-full object-contain"
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMuted(!isMuted);
+                }}
+                className="absolute top-4 left-4 p-3 bg-white/20 backdrop-blur-md rounded-2xl text-white hover:bg-white/40 transition-all z-20"
+              >
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </button>
+            </div>
+          ) : (
+            <img
+              src={activeMedia?.url || activeAd?.image_url}
+              alt={activeAd?.title}
+              className="w-full h-full object-contain"
+            />
+          )}
+          
           <div className="absolute inset-0 -z-10 bg-slate-900/5 backdrop-blur-3xl" />
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-900/90 via-slate-900/60 to-transparent flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex-1 text-left">
               <h3 className="text-white font-bold text-lg md:text-2xl drop-shadow-md mb-1">
-                {ads[currentIndex]?.title}
+                {activeAd?.title}
               </h3>
-              {ads[currentIndex]?.description && (
+              {activeAd?.description && (
                 <p className="text-slate-200 text-sm md:text-base line-clamp-2 max-w-xl">
-                  {ads[currentIndex].description}
+                  {activeAd.description}
                 </p>
               )}
             </div>
             
-            {ads[currentIndex]?.cta_text && ads[currentIndex]?.cta_url && (
+            {activeAd?.cta_text && activeAd?.cta_url && (
               <motion.a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                href={ads[currentIndex].cta_url}
+                href={activeAd.cta_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm md:text-base shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 whitespace-nowrap hover:bg-indigo-700 transition-colors"
               >
-                {ads[currentIndex].cta_text}
+                {activeAd.cta_text}
                 <ExternalLink className="w-4 h-4" />
               </motion.a>
             )}
@@ -77,18 +153,28 @@ export const KioskAdCarousel: React.FC = () => {
       </AnimatePresence>
       
       {/* Progress indicators */}
-      {ads.length > 1 && (
-        <div className="absolute top-4 right-4 flex gap-1.5 z-10">
-          {ads.map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                idx === currentIndex ? 'w-6 bg-indigo-500' : 'w-2 bg-white/50'
-              }`}
-            />
-          ))}
-        </div>
-      )}
+      <div className="absolute top-4 right-4 flex gap-1.5 z-10">
+        {filteredAds.map((ad, idx) => (
+          <div key={idx} className="flex gap-0.5">
+            {idx === currentIndex && mediaItems.length > 1 ? (
+              mediaItems.map((_, mIdx) => (
+                <div
+                  key={mIdx}
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    mIdx === activeMediaIndex ? 'w-4 bg-indigo-50' : 'w-1 bg-white/30'
+                  }`}
+                />
+              ))
+            ) : (
+              <div
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  idx === currentIndex ? 'w-6 bg-indigo-50' : 'w-2 bg-white/50'
+                }`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

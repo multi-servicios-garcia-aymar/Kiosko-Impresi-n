@@ -1,12 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, Check, Loader2, Megaphone, Clock, MapPin, Globe, AlignLeft, ExternalLink, MousePointerClick } from 'lucide-react';
+import { X, Upload, Check, Loader2, Megaphone, Clock, MapPin, AlignLeft, MousePointerClick, Users, Layout, Zap, Hash, Plus, Trash2, Film, Image as ImageIcon, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { KioskAd } from '../store/useAdStore';
+import { KioskAd, AdMediaItem } from '../store/useAdStore';
 
 interface AdModalProps {
   onClose: () => void;
   onSave: (ad: Partial<KioskAd>) => Promise<void>;
+}
+
+interface PendingMediaItem {
+  id: string;
+  file: File;
+  preview: string;
+  type: 'image' | 'video';
 }
 
 export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
@@ -16,53 +23,90 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
   const [ctaUrl, setCtaUrl] = useState('');
   const [duration, setDuration] = useState(5000);
   const [targetId, setTargetId] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [targetAudience, setTargetAudience] = useState<'all' | 'registered' | 'anonymous' | 'trial'>('all');
+  const [placement, setPlacement] = useState<'carousel' | 'sidebar' | 'overlay'>('carousel');
+  const [displayMode, setDisplayMode] = useState<'fade' | 'slide' | 'zoom'>('fade');
+  const [priority, setPriority] = useState(0);
+  
+  const [mediaItems, setMediaItems] = useState<PendingMediaItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      Array.from(files).forEach(file => {
+        const type = file.type.startsWith('video/') ? 'video' : 'image';
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setMediaItems(prev => [
+            ...prev,
+            {
+              id: Math.random().toString(36).substr(2, 9),
+              file,
+              preview: reader.result as string,
+              type
+            }
+          ]);
+        };
+        reader.readAsDataURL(file);
+      });
+      // Clear input
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  const removeMediaItem = (id: string) => {
+    setMediaItems(prev => prev.filter(item => item.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !imageFile) {
-      alert('Por favor agrega un título y una imagen');
+    if (!title || mediaItems.length === 0) {
+      alert('Por favor agrega un título y al menos un archivo multimedia');
       return;
     }
 
     setIsUploading(true);
     try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `ad_${fileName}`;
+      const uploadedMedia: AdMediaItem[] = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from('ads')
-        .upload(filePath, imageFile);
+      for (const item of mediaItems) {
+        const fileExt = item.file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `ad_${fileName}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from('ads')
+          .upload(filePath, item.file);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('ads')
-        .getPublicUrl(filePath);
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('ads')
+          .getPublicUrl(filePath);
+
+        uploadedMedia.push({
+          url: publicUrl,
+          type: item.type,
+          duration: duration // default duration for each item
+        });
+      }
 
       await onSave({
         title,
         description: description || undefined,
-        image_url: publicUrl,
+        image_url: uploadedMedia[0].url, // Use first as thumbnail
+        media_items: uploadedMedia,
         cta_text: ctaText || undefined,
         cta_url: ctaUrl || undefined,
         is_active: true,
-        display_duration: duration,
-        target_machine_id: targetId || null
+        display_duration: duration * uploadedMedia.length, // Total duration
+        target_machine_id: targetId || null,
+        target_audience: targetAudience,
+        placement,
+        display_mode: displayMode,
+        priority
       });
       
       onClose();
@@ -85,7 +129,7 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95dvh]"
+        className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95dvh]"
       >
         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
@@ -93,7 +137,7 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
               <Megaphone className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900">Nuevo Anuncio</h3>
+              <h3 className="font-bold text-slate-900">Nuevo Anuncio Multimedia</h3>
               <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Creador de Campañas</p>
             </div>
           </div>
@@ -105,45 +149,71 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
-          {/* Image Upload Area */}
-          <div 
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative aspect-video rounded-[2rem] border-2 border-dashed transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center group ${
-              imagePreview ? 'border-transparent' : 'border-slate-200 hover:border-indigo-400 bg-slate-50/50'
-            }`}
-          >
-            {imagePreview ? (
-              <>
-                <img src={imagePreview} className="w-full h-full object-contain relative z-10" alt="Preview" />
-                <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-3xl" />
-                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm z-20">
-                  <div className="flex items-center gap-2 text-white font-bold text-sm">
-                    <Upload className="w-5 h-5" /> Cambiar Imagen
-                  </div>
+        <form id="ad-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
+          {/* Media Items Area */}
+          <div className="space-y-4">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block ml-1">Archivos del Anuncio (Imágenes y Videos)</label>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <AnimatePresence>
+                {mediaItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="relative aspect-video rounded-3xl overflow-hidden bg-slate-100 group border border-slate-200 shadow-sm"
+                  >
+                    {item.type === 'image' ? (
+                      <img src={item.preview} className="w-full h-full object-cover" alt="Preview" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-4">
+                        <Film className="w-8 h-8 mb-2 text-indigo-400" />
+                        <span className="text-[8px] font-bold text-center break-all opacity-60 px-2 leading-tight">{item.file.name}</span>
+                        <div className="mt-2 bg-indigo-500/20 px-2 py-0.5 rounded-full text-[7px] uppercase font-bold">Video Clip</div>
+                      </div>
+                    )}
+                    
+                    <button
+                      type="button"
+                      onClick={() => removeMediaItem(item.id)}
+                      className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-xl shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 active:scale-90"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="aspect-video rounded-3xl border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-slate-50 flex flex-col items-center justify-center gap-2 group transition-all text-slate-400 hover:text-indigo-500 hover:bg-indigo-50/30"
+              >
+                <div className="w-10 h-10 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus className="w-5 h-5" />
                 </div>
-              </>
-            ) : (
-              <div className="text-center p-6">
-                <div className="w-16 h-16 bg-white rounded-3xl shadow-sm border border-slate-100 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <Upload className="w-6 h-6 text-indigo-500" />
-                </div>
-                <p className="text-sm font-bold text-slate-700">Selecciona o arrastra una imagen</p>
-                <p className="text-xs text-slate-400 mt-1">Recomendado: 1920x1080px (WebP/JPG)</p>
-              </div>
-            )}
+                <span className="text-[10px] font-bold uppercase tracking-tight">Agregar Media</span>
+              </button>
+            </div>
+
             <input 
               type="file" 
               ref={fileInputRef} 
               onChange={handleFileChange} 
               className="hidden" 
-              accept="image/*" 
+              multiple 
+              accept="image/*,video/*" 
             />
+            
+            <p className="text-[9px] text-slate-400 flex items-center gap-2 ml-1 italic">
+              <Zap className="w-3 h-3" /> Si agregas varios archivos, se alternarán según la duración especificada.
+            </p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">Título del Anuncio</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">Título de la Campaña</label>
               <input
                 type="text"
                 required
@@ -156,13 +226,13 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
 
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
-                <div className="flex items-center gap-1.5"><AlignLeft className="w-3 h-3" /> Descripción (Opcional)</div>
+                <div className="flex items-center gap-1.5"><AlignLeft className="w-3 h-3" /> Mensaje / Copia</div>
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Explica de qué trata tu promoción..."
-                rows={3}
+                rows={2}
                 className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 font-medium resize-none"
               />
             </div>
@@ -192,7 +262,7 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
-                  <div className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> Duración (ms)</div>
+                  <div className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> Duración por item (ms)</div>
                 </label>
                 <input
                   type="number"
@@ -217,6 +287,68 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
                 />
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
+                  <div className="flex items-center gap-1.5"><Users className="w-3 h-3" /> ¿Quién lo recibe?</div>
+                </label>
+                <select
+                  value={targetAudience}
+                  onChange={(e) => setTargetAudience(e.target.value as any)}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-sm appearance-none"
+                >
+                  <option value="all">Todos los Usuarios</option>
+                  <option value="registered">Solo Registrados</option>
+                  <option value="anonymous">Solo Anónimos</option>
+                  <option value="trial">Usuarios en Prueba (Sin Licencia)</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
+                  <div className="flex items-center gap-1.5"><Layout className="w-3 h-3" /> Estrategia Visual</div>
+                </label>
+                <select
+                  value={placement}
+                  onChange={(e) => setPlacement(e.target.value as any)}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-sm appearance-none"
+                >
+                  <option value="carousel">Carrusel Principal (HD)</option>
+                  <option value="sidebar">Barra Lateral (Eco)</option>
+                  <option value="overlay">Superpuesto (Max)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
+                  <div className="flex items-center gap-1.5"><Zap className="w-3 h-3" /> Animación</div>
+                </label>
+                <select
+                  value={displayMode}
+                  onChange={(e) => setDisplayMode(e.target.value as any)}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-sm appearance-none"
+                >
+                  <option value="fade">Desvanecer (Fade)</option>
+                  <option value="slide">Deslizar (Slide)</option>
+                  <option value="zoom">Zoom Suave</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
+                  <div className="flex items-center gap-1.5"><Hash className="w-3 h-3" /> Prioridad (0-99)</div>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="99"
+                  value={priority}
+                  onChange={(e) => setPriority(parseInt(e.target.value) || 0)}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-sm"
+                />
+              </div>
+            </div>
           </div>
         </form>
 
@@ -229,19 +361,20 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
             Cancelar
           </button>
           <button
-            onClick={handleSubmit}
-            disabled={isUploading || !title || !imageFile}
+            form="ad-form"
+            type="submit"
+            disabled={isUploading || !title || mediaItems.length === 0}
             className="flex-[2] py-4 bg-indigo-600 text-white rounded-[1.5rem] font-bold text-sm shadow-xl shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all active:scale-95"
           >
             {isUploading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Subiendo Anuncio...
+                Sincronizando Multimedia...
               </>
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                Publicar Ahora
+                Lanzar Campaña
               </>
             )}
           </button>

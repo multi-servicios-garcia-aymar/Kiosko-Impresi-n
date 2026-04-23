@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LicenseService } from '../services/licenseService';
+import { LicenseService } from '../services/LicenseService';
 import { ActivationScreen } from './ActivationScreen';
 import { Loader2 } from 'lucide-react';
 import { useLicense } from '../context/LicenseContext';

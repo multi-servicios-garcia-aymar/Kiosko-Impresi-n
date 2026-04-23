@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { KeyRound, ShieldCheck, AlertCircle, Loader2, Printer, Mail, MessageCircle } from 'lucide-react';
-import { LicenseService } from '../services/licenseService';
+import { LicenseService } from '../services/LicenseService';
 import { Logo } from './ui/Logo';
 
 interface ActivationScreenProps {

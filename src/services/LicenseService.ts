@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { logger } from './loggerService';
+import { logger } from './LoggerService';
 
 export interface LicenseData {
   key: string;

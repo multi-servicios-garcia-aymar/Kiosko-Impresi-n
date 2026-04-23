@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ActivationScreen } from '../ActivationScreen';
 import { DeviceSyncModal } from '../DeviceSyncModal';
 import { useLicense } from '../../context/LicenseContext';
-import { LicenseService } from '../../services/licenseService';
+import { LicenseService } from '../../services/LicenseService';
 import { useAuthStore } from '../../store/useAuthStore';
 import { usePhotoStore } from '../../store/usePhotoStore';
 import { Logo } from '../ui/Logo';
+import { KioskAdSidebar } from '../KioskAdSidebar';
+import { KioskAdOverlay } from '../KioskAdOverlay';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -273,12 +275,21 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-0 overflow-hidden print:overflow-visible print:flex-none print:h-auto">
-        <AnimatePresence mode="wait">
-          {children}
-        </AnimatePresence>
-      </main>
+      {/* Main Content Area with Optional Sidebar */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden print:overflow-visible print:flex-none print:h-auto">
+          <AnimatePresence mode="wait">
+            {children}
+          </AnimatePresence>
+        </main>
+        
+        {/* Ad Sidebar - Only visible on XL and above */}
+        <aside className="w-80 shrink-0 hidden xl:block border-l border-slate-100 h-full bg-white">
+          <KioskAdSidebar />
+        </aside>
+      </div>
+
+      <KioskAdOverlay />
 
       {/* Global Bottom Credits - Tiny & Elegant */}
       <footer className="bg-white border-t border-slate-100 py-3 px-4 print:hidden shrink-0">

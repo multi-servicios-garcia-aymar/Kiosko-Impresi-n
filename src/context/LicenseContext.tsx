@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { LicenseData, LicenseService } from '../services/licenseService';
-import { logger } from '../services/loggerService';
+import { LicenseData, LicenseService } from '../services/LicenseService';
+import { logger } from '../services/LoggerService';
 import { useAuthStore } from '../store/useAuthStore';
 
 interface LicenseContextType {

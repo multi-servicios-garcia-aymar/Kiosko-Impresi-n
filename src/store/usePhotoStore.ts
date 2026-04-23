@@ -181,8 +181,8 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       console.log('📡 Cobertura Realtime activada para HWID:', machineId);
 
       const setupChannel = (attempt = 0) => {
-        if (attempt > 10) { // Increased tolerance
-          console.error('❌ Máximo de reintentos Realtime alcanzado.');
+        if (attempt > 5) { // Reducido para no saturar, pero con backoff mayor
+          console.error('❌ Reintentos Realtime pausados por fallos continuos.');
           set({ syncStatus: 'error' });
           return;
         }
@@ -195,8 +195,8 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
         if (retryTimeout) clearTimeout(retryTimeout);
 
-        // Unique channel ID for this attempt/machine
-        const channelId = `gallery-sync-${machineId}-${Date.now()}`;
+        // Usemos un channel ID estable basado en machineId para evitar fugas
+        const channelId = `gallery-sync-${machineId}`;
         
         const channel = supabase
           .channel(channelId)
@@ -210,7 +210,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             },
             async (payload) => {
               console.log('🔥 Cambios detectados en Galería Nube:', payload.eventType, payload);
-              // Optimistic or deep sync
+              // Optimistically sync or deep reload
               if (payload.eventType === 'INSERT') {
                  const newRow = payload.new;
                  if (!newRow || !newRow.id || !newRow.storage_path) {
@@ -265,21 +265,21 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
           } 
           else if (status === 'CLOSED') {
             console.warn('⚠️ Canal Realtime cerrado.');
-            // Only retry if we still have a machineId
             const currentMachine = getAuthMachineId();
             if (currentMachine === machineId) {
-              retryTimeout = setTimeout(() => setupChannel(attempt + 1), 3000);
+              retryTimeout = setTimeout(() => setupChannel(attempt + 1), 5000);
             }
           } 
           else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            console.error(`❌ Error en canal Realtime (${status}):`, err?.message || 'Sin detalles');
+            const errorMsg = err?.message || 'Sin detalles (Posible firewall o tabla no configurada para Realtime)';
+            console.error(`❌ Error en canal Realtime (${status}):`, errorMsg);
             set({ syncStatus: 'error' });
             
-            // Exponental backoff for retries
-            const backoff = Math.min(30000, 5000 * Math.pow(1.5, attempt));
+            // Backoff más agresivo para timeouts
+            const backoff = Math.min(60000, 10000 * Math.pow(2, attempt));
             retryTimeout = setTimeout(() => setupChannel(attempt + 1), backoff);
           }
-        });
+        }, 30000); // 30 segundos de timeout para ser muy tolerantes
       };
 
       // Helper to check current machine id safely

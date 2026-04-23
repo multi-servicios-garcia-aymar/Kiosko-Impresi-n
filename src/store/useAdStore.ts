@@ -1,13 +1,24 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 
+export interface AdMediaItem {
+  url: string;
+  type: 'image' | 'video';
+  duration?: number;
+}
+
 export interface KioskAd {
   id: string;
   title: string;
   description?: string;
-  image_url: string;
+  image_url: string; // Primary thumbnail
+  media_items?: AdMediaItem[];
   cta_text?: string;
   cta_url?: string;
+  target_audience: 'all' | 'registered' | 'anonymous' | 'trial';
+  placement: 'carousel' | 'sidebar' | 'overlay';
+  display_mode: 'fade' | 'slide' | 'zoom';
+  priority: number;
   is_active: boolean;
   display_duration: number;
   target_machine_id: string | null;
@@ -37,6 +48,7 @@ export const useAdStore = create<AdStore>((set, get) => ({
       let query = supabase
         .from('kiosk_ads')
         .select('*')
+        .order('priority', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (machineId) {
@@ -72,7 +84,17 @@ export const useAdStore = create<AdStore>((set, get) => ({
           get().fetchAds(machineId);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Suscripción de Publicidad activa');
+        } else if (status === 'TIMED_OUT') {
+          console.error('❌ Timeout en suscripción de Publicidad. Reintentando en 10s...');
+          setTimeout(() => {
+            set({ isInitialized: false });
+            get().initializeAdSync(machineId);
+          }, 10000);
+        }
+      }, 20000);
 
     set({ isInitialized: true });
   },

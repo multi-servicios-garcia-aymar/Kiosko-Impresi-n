@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from 'react-hot-toast';
 import { AuthGuard } from './components/AuthGuard';
 import { LicenseGuard } from './components/LicenseGuard';
 import { LicenseProvider } from './context/LicenseContext';
@@ -27,6 +28,7 @@ const PageLoader = () => (
 export default function App() {
   return (
     <HelmetProvider>
+      <Toaster position="top-right" />
       <ErrorBoundary>
         <AuthGuard>
           <LicenseProvider>

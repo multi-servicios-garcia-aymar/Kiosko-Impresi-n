@@ -1,17 +1,23 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { logger } from './services/loggerService';
+import { configService } from './services/ConfigService';
+import { logger } from './services/LoggerService';
 import './index.css';
 
-// Initialize Global Telemetry for Crashes
+const container = document.getElementById('root')!;
+const root = createRoot(container);
+
+// Initialize Global Telemetry
 logger.setupGlobalHandlers();
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary>
+const init = async () => {
+  await configService.initialize();
+  root.render(
+    <StrictMode>
       <App />
-    </ErrorBoundary>
-  </StrictMode>,
-);
+    </StrictMode>
+  );
+};
+
+init();
