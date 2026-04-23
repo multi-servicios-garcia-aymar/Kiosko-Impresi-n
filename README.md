@@ -49,11 +49,11 @@ npm install
 ```
 
 ### 2. Configuración de Base de Datos
-Copia el contenido del archivo `SUPABASE_SETUP_GALLERY.sql` y ejecútalo en el **SQL Editor** de tu proyecto Supabase. Esto creará:
-- Tablas de Perfiles, Fotos y Publicidad.
-- Políticas de Seguridad (RLS).
+Copia el contenido del archivo `SUPABASE_MASTER_SETUP.sql` y ejecútalo en el **SQL Editor** de tu proyecto Supabase. Esto creará:
+- Tablas de Perfiles, Fotos, Licencias, Logs y Configuración.
+- Políticas de Seguridad Avanzadas (RLS).
 - Buckets de almacenamiento (`gallery`, `ads`).
-- Publicaciones en Tiempo Real.
+- Publicaciones en Tiempo Real sincronizadas.
 
 ### 3. Variables de Entorno
 Crea un archivo `.env` basado en `.env.example`:
@@ -79,7 +79,7 @@ npm run dev
 │   ├── lib/           # Utilidades (IA, PDF, Layouts, Supabase)
 │   ├── store/         # Zustand Stores (Ads, Gallery)
 │   └── pages/         # Vistas principales (Kiosko, Admin, Auth)
-├── SUPABASE_SETUP_GALLERY.sql # Script maestro de DB
+├── SUPABASE_MASTER_SETUP.sql # Script maestro de DB unificado
 └── public/            # Assets estáticos y PWA logic
 ```
 
