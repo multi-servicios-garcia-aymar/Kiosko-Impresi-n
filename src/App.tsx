@@ -12,6 +12,7 @@ import { Loader2 } from 'lucide-react';
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const PhotoPrintCreator = React.lazy(() => import('./components/PhotoPrintCreator').then(module => ({ default: module.PhotoPrintCreator })));
 const Legal = React.lazy(() => import('./pages/Legal'));
+const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
 
 // Fallback loader component
 const PageLoader = () => (
@@ -37,6 +38,7 @@ export default function App() {
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/photo-print/:templateId" element={<PhotoPrintCreator />} />
                       <Route path="/legal" element={<Legal />} />
+                      <Route path="/admin" element={<AdminPanel />} />
                     </Routes>
                   </Suspense>
                 </MainLayout>

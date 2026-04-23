@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut, Smartphone, Shield, Scale } from 'lucide-react';
+import { User, Printer, Calendar, Mail, MessageCircle, ExternalLink, KeyRound, LogOut, Smartphone, Shield, Scale, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ActivationScreen } from '../ActivationScreen';
 import { DeviceSyncModal } from '../DeviceSyncModal';
@@ -13,7 +13,7 @@ import { Logo } from '../ui/Logo';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { license, trialStatus, refreshLicense } = useLicense();
-  const { user, signOut } = useAuthStore();
+  const { user, profile, signOut } = useAuthStore();
   const { initializeCloudSync } = usePhotoStore();
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [machineId, setMachineId] = useState<string>('');
@@ -118,6 +118,22 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                             </span>
                           </div>
                         </div>
+
+                        {profile?.is_super_admin && (
+                          <button 
+                            onClick={() => {
+                              setIsAdminOpen(false);
+                              navigate('/admin');
+                            }}
+                            className="w-full flex items-center gap-3 p-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+                          >
+                            <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                            <div className="flex flex-col items-start">
+                              <span className="text-sm font-bold">Panel Super Admin</span>
+                              <span className="text-[10px] opacity-70">Acceso a funciones globales</span>
+                            </div>
+                          </button>
+                        )}
 
                         <div className="space-y-3">
                           <button 
