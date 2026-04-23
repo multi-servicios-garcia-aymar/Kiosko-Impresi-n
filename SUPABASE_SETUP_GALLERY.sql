@@ -73,60 +73,83 @@ on conflict (id) do update set
   full_name = excluded.full_name,
   avatar_url = excluded.avatar_url;
 
--- 3. Create the Storage Bucket for the Gallery System
+-- 3. Create the Storage Buckets
 insert into storage.buckets (id, name, public) 
-values ('gallery', 'gallery', true)
+values ('gallery', 'gallery', true), ('ads', 'ads', true)
 ON CONFLICT (id) DO NOTHING;
 
--- 4. Create the Cloud Gallery Table
+-- 4. Create the Tables
+
+-- 4.1 Gallery Table
 create table public.kiosk_gallery_photos (
-    id text primary key,           -- Text ID to match local Date.now() timestamp ID perfectly
-    user_id uuid references auth.users(id) on delete cascade, -- Link to user
-    machine_id text not null,      -- Stores the license/machine ID grouping
-    storage_path text not null,    -- Path inside the bucket
-    template_id text,              -- Link to template used
+    id text primary key,           
+    user_id uuid references auth.users(id) on delete cascade,
+    machine_id text not null,      
+    storage_path text not null,    
+    template_id text,              
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Turn on REPLICA IDENTITY FULL so deletes transmit the entire row data to web clients
-ALTER TABLE public.kiosk_gallery_photos REPLICA IDENTITY FULL;
+-- 4.2 Advertising Table
+create table public.kiosk_ads (
+    id uuid default gen_random_uuid() primary key,
+    title text not null,
+    image_url text not null,
+    is_active boolean default true,
+    display_duration integer default 5000, -- in ms
+    target_machine_id text, -- optional: only for specific kiosks
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
--- 5. Turn on Realtime for the table (Idempotent)
+-- Turn on REPLICA IDENTITY FULL for Realtime Deletes
+ALTER TABLE public.kiosk_gallery_photos REPLICA IDENTITY FULL;
+ALTER TABLE public.kiosk_ads REPLICA IDENTITY FULL;
+
+-- 5. Turn on Realtime (Idempotent)
 DO $$
 BEGIN
-    -- Ensure the publication exists
     IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
         CREATE PUBLICATION supabase_realtime;
     END IF;
 
-    -- Add the table to the publication if not already present
+    -- Add Gallery Table
     IF NOT EXISTS (
-        SELECT 1
-        FROM pg_publication_tables
-        WHERE pubname = 'supabase_realtime'
-          AND schemaname = 'public'
-          AND tablename = 'kiosk_gallery_photos'
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'kiosk_gallery_photos'
     ) THEN
         EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE public.kiosk_gallery_photos;';
     END IF;
+
+    -- Add Ads Table
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'kiosk_ads'
+    ) THEN
+        EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE public.kiosk_ads;';
+    END IF;
 END $$;
 
--- 6. Set up Row Level Security (RLS) for the Table
+-- 6. Set up Row Level Security (RLS)
 alter table public.kiosk_gallery_photos enable row level security;
+alter table public.kiosk_ads enable row level security;
 
-create policy "Users can view photos of their license"
-    on public.kiosk_gallery_photos for select
-    using (auth.role() = 'authenticated'); 
-
-create policy "Users can insert photos to their license"
-    on public.kiosk_gallery_photos for insert
-    with check (auth.role() = 'authenticated');
-
-create policy "Users can delete their photos"
-    on public.kiosk_gallery_photos for delete
+-- Gallery RLS
+create policy "Authenticated users can manage gallery"
+    on public.kiosk_gallery_photos for all
     using (auth.role() = 'authenticated');
 
--- 7. Set up Security Policies for the Storage Bucket (gallery)
+-- Ads RLS
+create policy "Everyone can view active ads"
+    on public.kiosk_ads for select
+    using (is_active = true);
+
+create policy "SuperAdmins can manage ads"
+    on public.kiosk_ads for all
+    using (exists (select 1 from public.profiles where id = auth.uid() and is_super_admin = true));
+
+-- 7. Set up Security Policies for Storage
+-- GALLERY
 create policy "Public view access for Gallery bucket"
     on storage.objects for select
     using ( bucket_id = 'gallery' );
@@ -138,3 +161,12 @@ create policy "Authenticated users can upload to gallery bucket"
 create policy "Authenticated users can delete from gallery bucket"
     on storage.objects for delete
     using ( bucket_id = 'gallery' and auth.role() = 'authenticated' );
+
+-- ADS
+create policy "Public view access for Ads bucket"
+    on storage.objects for select
+    using ( bucket_id = 'ads' );
+
+create policy "SuperAdmins can manage ads bucket"
+    on storage.objects for all
+    using ( bucket_id = 'ads' and exists (select 1 from public.profiles where id = auth.uid() and is_super_admin = true));

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { KioskButton } from '../components/KioskButton';
+import { KioskAdCarousel } from '../components/KioskAdCarousel';
 import { SEO, StructuredData } from '../components/SEO';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { DEFAULT_TEMPLATES } from '../types/photo';
@@ -30,6 +31,9 @@ export default function Dashboard() {
         description="Selecciona formatos de impresión carnet, pasaporte o postales con Nexo Network Ec."
       />
       <StructuredData />
+      
+      <KioskAdCarousel />
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
