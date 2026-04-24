@@ -110,21 +110,21 @@ export const KioskAdOverlay: React.FC = () => {
               
               <button 
                 onClick={() => setActiveAd(null)}
-                className="absolute top-6 right-6 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors z-30"
+                className="absolute top-6 left-6 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors z-30"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 bg-indigo-600 rounded-full text-white text-[10px] font-black uppercase tracking-widest z-30 shadow-2xl">
-                <Megaphone className="w-3 h-3" /> Promoción Exclusiva
+              <div className="absolute top-6 right-6 flex items-center gap-2 px-3 py-1 bg-black/40 backdrop-blur-md rounded-lg text-white text-[9px] font-black uppercase tracking-widest z-30 border border-white/20">
+                ADS
               </div>
 
               <div className="absolute bottom-10 left-8 right-8 text-left z-30">
-                <h3 className="text-4xl font-black text-white mb-2 leading-[0.85] drop-shadow-2xl uppercase tracking-tighter">
+                <h3 className="text-2xl font-black text-white mb-2 leading-tight drop-shadow-2xl uppercase tracking-tight">
                   {activeAd.title}
                 </h3>
                 {activeAd.description && (
-                  <p className="text-white/90 text-sm font-semibold mb-6 line-clamp-3 drop-shadow-lg max-w-md">
+                  <p className="text-white/90 text-xs font-semibold mb-6 line-clamp-3 drop-shadow-lg max-w-md">
                     {activeAd.description}
                   </p>
                 )}

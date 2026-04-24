@@ -13,26 +13,32 @@ export function useSupabaseQuery<T>(
 ) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<PostgrestError | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const execute = useCallback(async () => {
-    setIsLoading(true);
+    setStatus('loading');
     setError(null);
     try {
       const { data: result, error: queryError } = await queryFn();
       if (queryError) {
         setError(queryError);
+        setStatus('error');
         options.onError?.(queryError);
       } else {
         setData(result);
+        setStatus('success');
         options.onSuccess?.(result);
       }
     } catch (e: any) {
-      const err = { message: e.message } as PostgrestError;
+      const err = { 
+        message: e.message || 'Unknown error during Supabase query',
+        details: e.details || '',
+        hint: e.hint || '',
+        code: e.code || 'UNKNOWN'
+      } as PostgrestError;
       setError(err);
+      setStatus('error');
       options.onError?.(err);
-    } finally {
-      setIsLoading(false);
     }
   }, [queryFn, options.onSuccess, options.onError]);
 
@@ -42,5 +48,13 @@ export function useSupabaseQuery<T>(
     }
   }, [execute, options.enabled]);
 
-  return { data, error, isLoading, refetch: execute };
+  return { 
+    data, 
+    error, 
+    status,
+    isLoading: status === 'loading', 
+    isSuccess: status === 'success',
+    isError: status === 'error',
+    refetch: execute 
+  };
 }

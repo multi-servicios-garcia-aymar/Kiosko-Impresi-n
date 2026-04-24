@@ -54,7 +54,7 @@ export const KioskAdSidebar: React.FC = () => {
     <div className="w-full h-full bg-slate-50 border-l border-slate-200 p-4 hidden xl:flex flex-col gap-6 sticky top-0 overflow-y-auto">
       <div className="flex items-center gap-2 mb-2">
         <div className="w-1.5 h-4 bg-indigo-500 rounded-full" />
-        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Publicidad Premium</h4>
+        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ADS</h4>
       </div>
 
       <AnimatePresence mode="wait">
@@ -96,15 +96,15 @@ export const KioskAdSidebar: React.FC = () => {
           
           <div className="p-5 flex flex-col gap-3">
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded text-[8px] font-black uppercase tracking-wider">
-                Promo Exclusiva
+              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[8px] font-black uppercase tracking-wider border border-slate-200">
+                ADS
               </span>
             </div>
-            <h5 className="font-black text-indigo-600 text-lg leading-tight group-hover:text-indigo-500 transition-colors uppercase tracking-tighter">
+            <h5 className="font-black text-indigo-600 text-base leading-tight group-hover:text-indigo-500 transition-colors uppercase tracking-tight">
               {activeAd.title}
             </h5>
             {activeAd.description && (
-              <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed font-medium">
+              <p className="text-[10px] text-slate-500 line-clamp-3 leading-relaxed font-medium">
                 {activeAd.description}
               </p>
             )}

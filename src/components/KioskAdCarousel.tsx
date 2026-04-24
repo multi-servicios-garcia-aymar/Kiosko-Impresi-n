@@ -130,21 +130,14 @@ export const KioskAdCarousel: React.FC = () => {
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none opacity-80" />
           
-          <div className="absolute bottom-0 left-0 right-0 p-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
             <div className="flex-1 text-left">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="px-2 py-0.5 bg-indigo-600 rounded text-[9px] font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-500/20">
-                  Publicidad Premium
-                </div>
-                <div className="h-px w-8 bg-white/20" />
-              </div>
-              
-              <h3 className="text-white font-black text-2xl md:text-4xl tracking-tight leading-[1.1] mb-2 drop-shadow-2xl">
+              <h3 className="text-white font-black text-lg md:text-2xl tracking-tight leading-[1.1] mb-1 md:mb-2 drop-shadow-2xl uppercase">
                 {activeAd?.title}
               </h3>
               
               {activeAd?.description && (
-                <p className="text-white/70 text-sm md:text-base font-medium line-clamp-2 max-w-2xl drop-shadow-md">
+                <p className="text-white/70 text-[10px] md:text-sm font-medium line-clamp-1 md:line-clamp-2 max-w-2xl drop-shadow-md">
                   {activeAd.description}
                 </p>
               )}
@@ -167,9 +160,13 @@ export const KioskAdCarousel: React.FC = () => {
         </motion.div>
       </AnimatePresence>
       
-      {/* Progress indicators */}
-      <div className="absolute top-4 right-4 flex gap-1.5 z-10">
-        {filteredAds.map((ad, idx) => (
+      {/* Progress indicators & ADS tag */}
+      <div className="absolute top-4 right-4 flex flex-col items-end gap-2 z-20">
+        <div className="px-2 py-0.5 bg-black/40 backdrop-blur-md rounded text-[9px] font-black uppercase tracking-[0.2em] text-white border border-white/20">
+          ADS
+        </div>
+        <div className="flex gap-1.5">
+          {filteredAds.map((ad, idx) => (
           <div key={idx} className="flex gap-0.5">
             {idx === currentIndex && mediaItems.length > 1 ? (
               mediaItems.map((_, mIdx) => (
@@ -190,6 +187,7 @@ export const KioskAdCarousel: React.FC = () => {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 };
