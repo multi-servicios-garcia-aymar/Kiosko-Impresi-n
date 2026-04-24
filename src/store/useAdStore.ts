@@ -45,6 +45,7 @@ export const useAdStore = create<AdStore>((set, get) => ({
   fetchAds: async (machineId) => {
     set({ isLoading: true });
     try {
+      console.log('🔍 Buscando anuncios para:', machineId || 'Global');
       let query = supabase
         .from('kiosk_ads')
         .select('*')
@@ -52,17 +53,28 @@ export const useAdStore = create<AdStore>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (machineId) {
-        // Fetch ads that are either for this machine specifically or for ALL machines (null)
         query = query.or(`target_machine_id.is.null,target_machine_id.eq.${machineId}`);
       }
 
       const { data, error } = await query;
 
-      if (!error && data) {
+      if (error) {
+        console.error('❌ Error de Supabase al buscar anuncios:', error);
+        // Si el error es de columna inexistente, informamos pero no bloqueamos
+        if (error.code === 'PGRST204') {
+          console.warn('⚠️ El esquema de la base de datos no está sincronizado. Por favor ejectua el SQL Master en el Dashboard de Supabase.');
+        }
+        set({ ads: [] });
+        return;
+      }
+
+      if (data) {
+        console.log('✅ Anuncios cargados:', data.length);
         set({ ads: data as KioskAd[] });
       }
     } catch (e) {
-      console.error('Error fetching ads', e);
+      console.error('❌ Error inesperado cargando anuncios:', e);
+      set({ ads: [] });
     } finally {
       set({ isLoading: false });
     }
