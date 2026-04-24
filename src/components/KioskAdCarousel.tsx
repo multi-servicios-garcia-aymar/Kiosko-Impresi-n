@@ -96,7 +96,7 @@ export const KioskAdCarousel: React.FC = () => {
           initial={variants.initial}
           animate={variants.animate}
           exit={variants.exit}
-          transition={{ duration: (activeAd?.transition_delay || 500) / 1000, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className="absolute inset-0"
         >
           {activeMedia?.type === 'video' ? (

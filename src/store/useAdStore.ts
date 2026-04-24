@@ -18,7 +18,6 @@ export interface KioskAd {
   target_audience: 'all' | 'registered' | 'anonymous' | 'trial';
   placement: 'carousel' | 'sidebar' | 'overlay';
   display_mode: 'fade' | 'slide' | 'zoom';
-  transition_delay?: number; // Time the animation lasts (ms)
   priority: number;
   is_active: boolean;
   display_duration: number;

@@ -23,7 +23,6 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
   const [ctaText, setCtaText] = useState('');
   const [ctaUrl, setCtaUrl] = useState('');
   const [globalDuration, setGlobalDuration] = useState(5000);
-  const [transitionDelay, setTransitionDelay] = useState(500);
   const [targetId, setTargetId] = useState('');
   const [targetAudience, setTargetAudience] = useState<'all' | 'registered' | 'anonymous' | 'trial'>('all');
   const [placement, setPlacement] = useState<'carousel' | 'sidebar' | 'overlay'>('carousel');
@@ -115,7 +114,6 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
         target_audience: targetAudience,
         placement,
         display_mode: displayMode,
-        transition_delay: transitionDelay,
         priority
       });
       
@@ -302,21 +300,7 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
-                  <div className="flex items-center gap-1.5"><Zap className="w-3 h-3" /> Animación de Transición (ms)</div>
-                </label>
-                <input
-                  type="number"
-                  required
-                  step="100"
-                  min="0"
-                  value={transitionDelay}
-                  onChange={(e) => setTransitionDelay(parseInt(e.target.value) || 500)}
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
-                />
-              </div>
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
                   <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3" /> ID Máquina (Opcional)</div>

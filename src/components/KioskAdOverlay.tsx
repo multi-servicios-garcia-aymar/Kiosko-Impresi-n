@@ -73,7 +73,7 @@ export const KioskAdOverlay: React.FC = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: (activeAd?.transition_delay || 500) / 1000 }}
+                  transition={{ duration: 0.5 }}
                   className="w-full h-full"
                 >
                   {activeMedia?.type === 'video' ? (
