@@ -11,7 +11,7 @@ export default function Legal() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto bg-slate-50 no-scrollbar">
       <SEO 
         title={activeTab === 'terms' ? 'Términos y Condiciones' : 'Política de Privacidad'}
         description="Información legal sobre el uso del Kiosko de Impresión Nexo Network Ec."

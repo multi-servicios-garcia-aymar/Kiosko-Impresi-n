@@ -47,7 +47,7 @@ const AdminPanel: React.FC = () => {
   ];
 
   return (
-    <div className="flex-1 w-full bg-slate-50 min-h-screen p-6 overflow-y-auto">
+    <div className="flex-1 w-full bg-slate-50 min-h-screen p-6 overflow-y-auto no-scrollbar">
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

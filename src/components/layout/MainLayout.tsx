@@ -67,7 +67,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </AnimatePresence>
       {/* Navigation Bar */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 print:hidden">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div 
             className="flex items-center gap-3 cursor-pointer" 
             onClick={() => navigate('/')}
@@ -293,7 +293,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* Global Bottom Credits - Tiny & Elegant */}
       <footer className="bg-white border-t border-slate-100 py-3 px-4 print:hidden shrink-0">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-1.5 opacity-50 hover:opacity-100 transition-opacity">
             <Shield className="w-3 h-3 text-indigo-500" />
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">

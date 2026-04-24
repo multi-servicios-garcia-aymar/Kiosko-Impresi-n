@@ -25,7 +25,7 @@ export default function Dashboard() {
   }, [setTemplates]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 h-full overflow-y-auto">
+    <div className="max-w-6xl mx-auto px-6 py-8 md:py-16 h-full overflow-y-auto no-scrollbar">
       <SEO 
         title="Centro de Impresión Fotográfica"
         description="Selecciona formatos de impresión carnet, pasaporte o postales con Nexo Network Ec."

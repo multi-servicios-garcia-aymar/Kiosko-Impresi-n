@@ -1,17 +1,18 @@
 @import "tailwindcss";
 @layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    display: none;
   }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+  .custom-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
   .hide-number-spinners::-webkit-inner-spin-button,
   .hide-number-spinners::-webkit-outer-spin-button {
@@ -30,8 +31,16 @@
 }
 
 @layer base {
+  html, body {
+    @apply h-full overflow-hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
   body {
     @apply bg-slate-50 text-slate-900 font-sans antialiased;
+  }
+  body::-webkit-scrollbar {
+    display: none;
   }
 }
 

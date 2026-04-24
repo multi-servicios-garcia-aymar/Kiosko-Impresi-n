@@ -65,7 +65,7 @@ export const PhotoPrintCreator: React.FC = () => {
   };
 
   return (
-    <div ref={wrapperRef} className="w-full h-full flex flex-col items-center justify-start overflow-y-auto lg:overflow-hidden print:overflow-visible bg-slate-50 print:bg-white print:block">
+    <div ref={wrapperRef} className="w-full h-full flex flex-col items-center justify-start overflow-y-auto lg:overflow-hidden print:overflow-visible bg-slate-50 print:bg-white print:block no-scrollbar">
       <SEO 
         title={`Imprimir ${selectedTemplate.name}`}
         description={`Configura e imprime tus fotos en formato ${selectedTemplate.name} con las dimensiones correctas: ${selectedTemplate.photoWidth}x${selectedTemplate.photoHeight}mm.`}
