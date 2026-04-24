@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { Megaphone, Plus, Trash, Globe, MapPin, Clock, Layout, Users, Zap, Layers, Play } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Megaphone, Plus, Trash, Globe, MapPin, Clock, Layout, Users, Zap, Layers, Play, Info, X, FileText, AlignLeft } from 'lucide-react';
 import { KioskAd } from '../../store/useAdStore';
 import { toast } from 'react-hot-toast';
 import { logger } from '../../services/LoggerService';
@@ -14,6 +14,7 @@ interface AdminAdsProps {
 }
 
 export const AdminAds: React.FC<AdminAdsProps> = ({ ads, isLoading, onNewAd, onUpdateAd, onDeleteAd }) => {
+  const [showSpecs, setShowSpecs] = useState(false);
   const handleToggleActive = async (ad: KioskAd) => {
     try {
       await onUpdateAd(ad.id, { is_active: !ad.is_active });
@@ -42,14 +43,124 @@ export const AdminAds: React.FC<AdminAdsProps> = ({ ads, isLoading, onNewAd, onU
           <h2 className="text-xl font-bold text-slate-900">Gestión de Publicidad</h2>
           <p className="text-sm text-slate-500">Configura los banners que verán tus usuarios en los kioskos.</p>
         </div>
-        <button 
-          onClick={onNewAd}
-          className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Anuncio
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowSpecs(true)}
+            className="px-4 py-2.5 bg-white border border-slate-100 text-slate-600 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-2"
+          >
+            <Info className="w-4 h-4 text-indigo-500" />
+            Formatos
+          </button>
+          <button 
+            onClick={onNewAd}
+            className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo Anuncio
+          </button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {showSpecs && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSpecs(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col p-8"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
+                    <Info className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-lg">Guía de Publicidad</h3>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Requerimientos Técnicos Kiosko</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowSpecs(false)}
+                  className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  {
+                    title: 'Carrusel Principal',
+                    aspect: '3:1 o 2:1',
+                    size: '1920x640px',
+                    pos: 'Banner Superior',
+                    icon: <Layout className="w-5 h-5" />
+                  },
+                  {
+                    title: 'Barra Lateral',
+                    aspect: '3:4 / 9:16',
+                    size: '600x800px',
+                    pos: 'Contenido Vertical',
+                    icon: <AlignLeft className="w-5 h-5" />
+                  },
+                  {
+                    title: 'Overlay / Splash',
+                    aspect: '4:3 o 1:1',
+                    size: '1080x1440px',
+                    pos: 'Pop-up Principal',
+                    icon: <Zap className="w-5 h-5" />
+                  },
+                  {
+                    title: 'Videos (General)',
+                    aspect: 'MP4 / H.264',
+                    size: 'Max 20MB',
+                    pos: 'Optimizado Kiosko',
+                    icon: <Play className="w-5 h-5" />
+                  }
+                ].map((spec, i) => (
+                  <div key={i} className="p-4 bg-slate-50 rounded-3xl border border-slate-100 flex gap-4 items-center group hover:border-indigo-100 transition-colors">
+                    <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-indigo-500 shrink-0 border border-slate-100 group-hover:scale-110 transition-transform">
+                      {spec.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-sm">{spec.title}</h4>
+                      <p className="text-[10px] font-bold text-indigo-500 uppercase">{spec.aspect} • {spec.size}</p>
+                      <p className="text-[10px] text-slate-400 font-medium italic">{spec.pos}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 flex gap-4 items-start">
+                <div className="w-10 h-10 bg-emerald-500 text-white rounded-xl flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-emerald-800 text-xs uppercase tracking-wider mb-1">Recomendaciones de Archivo</h4>
+                  <p className="text-xs text-emerald-700 leading-relaxed">
+                    Usa formatos <b>WEBP</b> o <b>JPG</b> para fotos. Para videos usa Bitrate bajo. Se recomienda no exceder los 15 segundos por anuncio.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowSpecs(false)}
+                className="w-full mt-8 py-4 bg-slate-900 text-white rounded-[1.5rem] font-bold text-sm shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95"
+              >
+                Cerrar Guía
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
