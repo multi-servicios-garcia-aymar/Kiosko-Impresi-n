@@ -103,6 +103,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='display_duration') THEN
         ALTER TABLE public.kiosk_ads ADD COLUMN display_duration integer DEFAULT 5000;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='transition_delay') THEN
+        ALTER TABLE public.kiosk_ads ADD COLUMN transition_delay integer DEFAULT 500;
+    END IF;
 END $$;
 
 -- 3.3 Photo Gallery (User Sync)

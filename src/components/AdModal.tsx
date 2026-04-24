@@ -14,6 +14,7 @@ interface PendingMediaItem {
   file: File;
   preview: string;
   type: 'image' | 'video';
+  duration: number;
 }
 
 export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
@@ -21,7 +22,8 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
   const [description, setDescription] = useState('');
   const [ctaText, setCtaText] = useState('');
   const [ctaUrl, setCtaUrl] = useState('');
-  const [duration, setDuration] = useState(5000);
+  const [globalDuration, setGlobalDuration] = useState(5000);
+  const [transitionDelay, setTransitionDelay] = useState(500);
   const [targetId, setTargetId] = useState('');
   const [targetAudience, setTargetAudience] = useState<'all' | 'registered' | 'anonymous' | 'trial'>('all');
   const [placement, setPlacement] = useState<'carousel' | 'sidebar' | 'overlay'>('carousel');
@@ -45,7 +47,8 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
               id: Math.random().toString(36).substr(2, 9),
               file,
               preview: reader.result as string,
-              type
+              type,
+              duration: globalDuration
             }
           ]);
         };
@@ -54,6 +57,12 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
       // Clear input
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  const updateItemDuration = (id: string, newDuration: number) => {
+    setMediaItems(prev => prev.map(item => 
+      item.id === id ? { ...item, duration: newDuration } : item
+    ));
   };
 
   const removeMediaItem = (id: string) => {
@@ -89,7 +98,7 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
         uploadedMedia.push({
           url: publicUrl,
           type: item.type,
-          duration: duration // default duration for each item
+          duration: item.duration
         });
       }
 
@@ -101,11 +110,12 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
         cta_text: ctaText || undefined,
         cta_url: ctaUrl || undefined,
         is_active: true,
-        display_duration: duration * uploadedMedia.length, // Total duration
+        display_duration: uploadedMedia.reduce((acc, curr) => acc + (curr.duration || 0), 0),
         target_machine_id: targetId || null,
         target_audience: targetAudience,
         placement,
         display_mode: displayMode,
+        transition_delay: transitionDelay,
         priority
       });
       
@@ -177,10 +187,23 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
                     <button
                       type="button"
                       onClick={() => removeMediaItem(item.id)}
-                      className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-xl shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 active:scale-90"
+                      className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-xl shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 active:scale-90 z-20"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+
+                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-slate-900/80 to-transparent flex items-center justify-between pointer-events-auto">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-white/70" />
+                        <input
+                          type="number"
+                          value={item.duration}
+                          onChange={(e) => updateItemDuration(item.id, parseInt(e.target.value) || 0)}
+                          className="w-16 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded outline-none transition-all"
+                        />
+                        <span className="text-[8px] text-white/50 font-bold uppercase">ms</span>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -206,22 +229,42 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
               accept="image/*,video/*" 
             />
             
-            <p className="text-[9px] text-slate-400 flex items-center gap-2 ml-1 italic">
-              <Zap className="w-3 h-3" /> Si agregas varios archivos, se alternarán según la duración especificada.
-            </p>
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[9px] text-slate-400 flex items-center gap-2 italic">
+                <Zap className="w-3 h-3" /> Si agregas varios archivos, se alternarán según la duración especificada.
+              </p>
+              <p className="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">
+                Duración Total: {(mediaItems.reduce((acc, curr) => acc + curr.duration, 0) / 1000).toFixed(1)}s
+              </p>
+            </div>
           </div>
 
           <div className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">Título de la Campaña</label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ej: Promo Verano 2024"
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 font-medium"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">Título de la Campaña</label>
+                <input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Ej: Promo Verano 2024"
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 font-medium"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
+                  <div className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> Duración Global Base (ms)</div>
+                </label>
+                <input
+                  type="number"
+                  step="1000"
+                  min="1000"
+                  value={globalDuration}
+                  onChange={(e) => setGlobalDuration(parseInt(e.target.value) || 5000)}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
+                />
+              </div>
             </div>
 
             <div>
@@ -262,15 +305,15 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block ml-1">
-                  <div className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> Duración por item (ms)</div>
+                  <div className="flex items-center gap-1.5"><Zap className="w-3 h-3" /> Animación de Transición (ms)</div>
                 </label>
                 <input
                   type="number"
                   required
-                  step="1000"
-                  min="2000"
-                  value={duration}
-                  onChange={(e) => setDuration(parseInt(e.target.value))}
+                  step="100"
+                  min="0"
+                  value={transitionDelay}
+                  onChange={(e) => setTransitionDelay(parseInt(e.target.value) || 500)}
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
                 />
               </div>

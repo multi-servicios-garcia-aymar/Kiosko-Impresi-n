@@ -57,6 +57,7 @@ export const KioskAdSidebar: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.05 }}
+          transition={{ duration: (activeAd?.transition_delay || 500) / 1000 }}
           className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden group flex flex-col"
         >
           <div className="aspect-[3/4] relative overflow-hidden">

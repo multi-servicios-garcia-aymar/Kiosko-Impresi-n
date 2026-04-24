@@ -68,14 +68,14 @@ export const AdminAds: React.FC<AdminAdsProps> = ({ ads, isLoading, onNewAd, onU
               layoutId={ad.id}
               className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group"
             >
-              <div className="aspect-video bg-slate-900 relative overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
+              <div className="aspect-video relative overflow-hidden flex items-center justify-center">
+                <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(#000000 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
                 <img 
                   src={ad.image_url} 
                   alt={ad.title} 
                   className="max-w-full max-h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                <div className="absolute top-2 right-2 flex flex-col items-end gap-1 z-20">
                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase shadow-sm ${ad.is_active ? 'bg-emerald-500 text-white' : 'bg-slate-400 text-white'}`}>
                     {ad.is_active ? 'Activo' : 'Inactivo'}
                   </span>
