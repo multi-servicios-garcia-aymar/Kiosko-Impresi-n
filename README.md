@@ -1,94 +1,120 @@
-# Nexo Kiosko Fotos 📸
-### Centro de Impresión Fotográfica Profesional - Nexo Network Ec
+# 📸 Nexo Kiosko Fotos
+> **Industrial-grade Kiosk Solution for Photography & Smart Printing.**
 
+[![Project Status: Active](https://img.shields.io/badge/Project_Status-Active-emerald.svg)](https://github.com/nexo-network/kiosko-fotos)
 [![License: Commercial](https://img.shields.io/badge/License-Commercial-indigo.svg)](LICENSE)
-[![React: 19](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
-[![Supabase: Database](https://img.shields.io/badge/Supabase-Realtime-emerald.svg)](https://supabase.com/)
+[![Built with: React 19](https://img.shields.io/badge/Frontend-React_19-blue.svg)](https://react.dev/)
+[![Backend: Supabase](https://img.shields.io/badge/Backend-Supabase-emerald.svg)](https://supabase.com/)
+[![Style: Tailwind 4](https://img.shields.io/badge/Style-Tailwind_4-38b2ac.svg)](https://tailwindcss.com/)
 
-**Nexo Kiosko Fotos** es una solución de software integral de grado empresarial diseñada para la gestión, edición y procesamiento automático de fotografías en estaciones de impresión y kioscos físicos. Optimizada para el ecosistema de **Nexo Network Ec**, combina inteligencia artificial avanzada con una arquitectura robusta en la nube.
-
----
-
-## 🌟 Características Destacadas
-
-### 🤖 Inteligencia Artificial & Procesamiento
-- **Background Removal**: Eliminación automática de fondos complejos mediante modelos de IA locales.
-- **SmartCrop Engine**: Análisis de entropía y detección de rostros para encuadres perfectos según el formato (Carnet, Pasaporte, Postal).
-- **Procesamiento Offline**: Una vez activada, la lógica central de IA puede funcionar sin dependencia constante de la nube.
-
-### 🖼️ Gestión Publicitaria (Ads Engine)
-- **Campañas Dinámicas**: Sistema de cartelería digital integrado con soporte para títulos, descripciones y botones de llamada a la acción (CTA).
-- **Sincronización en Tiempo Real**: Los anuncios se actualizan instantáneamente en todos los kioskos mediante Supabase Realtime.
-- **Segmentación**: Capacidad para dirigir anuncios a kioskos específicos mediante IDs de máquina.
-
-### 📄 Exportación Profesional
-- **Motor de Layouts**: Generación dinámica de rejillas de impresión (3x4 carnet, 10x15 postal, etc.).
-- **PDF de Alta Fidelidad**: Exportación de documentos listos para impresión profesional con precisión milimétrica.
+**Nexo Kiosko Fotos** is a comprehensive software suite designed for modern photo printing stations. Built for **Nexo Network Ec**, it leverages localized Edge AI for image processing while maintaining real-time cloud synchronization for management and advertising.
 
 ---
 
-## 🛠️ Stack Tecnológico
-
-- **Frontend**: React 19 + TypeScript + Tailwind CSS 4.
-- **Estado Global**: Zustand & Context API.
-- **Backend (Cloud)**: Supabase (PostgreSQL + Auth + Realtime + Storage).
-- **IA/ML**: `@imgly/background-removal`, `smartcrop.js`.
-- **Ecosistema PWA**: Manifest web y Service Workers para una experiencia instalable "App-like".
+## 📖 Table of Contents
+- [Core Features](#-core-features)
+- [Tech Stack](#-tech-stack)
+- [Getting Started](#-getting-started)
+- [Database Setup](#-database-setup)
+- [Project Structure](#-project-structure)
+- [Deployment](#-deployment)
+- [Support](#-support)
 
 ---
 
-## 🚀 Despliegue Rápido (GitHub Ready)
+## ✨ Core Features
 
-Sigue estos pasos para poner en marcha tu propia instancia de Nexo Kiosko:
+### 🤖 Smart Edge AI
+- **Automated Background Removal**: Instant masking of complex backgrounds directly in the browser using WASM-powered ML models.
+- **Intelligent SmartCrop**: Face-aware cropping for official formats (Carnet, Passport, Postcard).
+- **Offline Resilience**: Essential features work without an internet connection once initialized.
 
-### 1. Clonar y Preparar
+### 📢 Dynamic Ads Engine
+- **Cloud-Synced Campaigns**: Manage carousels, sidebar banners, and CTAs remotely.
+- **Real-time Delivery**: Instant deployment of new media to physical kiosks via Supabase Realtime.
+- **Priority Management**: Rule-based ad display logic.
+
+### 🖨️ Professional Printing
+- **Layout Templates**: Grid-based generation for various print sizes (3x4, 10x15, A4).
+- **High-Fidelity PDF Export**: Precision-engineered for professional printer drivers.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [React 19](https://react.dev/) with [Vite](https://vitejs.dev/)
+- **Database/Auth**: [Supabase](https://supabase.com/) (Postgres, RLS, Storage)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) & [Motion](https://motion.dev/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **AI Libraries**: `@imgly/background-removal`, `smartcrop`
+- **PDF Engine**: `jspdf` & `html2canvas`
+
+---
+
+## 🚀 Getting Started
+
+### 1. Installation
 ```bash
+# Clone the repository
 git clone https://github.com/nexo-network/kiosko-fotos.git
 cd kiosko-fotos
+
+# Install dependencies
 npm install
 ```
 
-### 2. Configuración de Base de Datos
-Copia el contenido del archivo `SUPABASE_MASTER_SETUP.sql` y ejecútalo en el **SQL Editor** de tu proyecto Supabase. Esto creará:
-- Tablas de Perfiles, Fotos, Licencias, Logs y Configuración.
-- Políticas de Seguridad Avanzadas (RLS).
-- Buckets de almacenamiento (`gallery`, `ads`).
-- Publicaciones en Tiempo Real sincronizadas.
-
-### 3. Variables de Entorno
-Crea un archivo `.env` basado en `.env.example`:
-```env
-VITE_SUPABASE_URL=tu_url_de_supabase
-VITE_SUPABASE_ANON_KEY=tu_clave_anon
-GEMINI_API_KEY=tu_clave_de_google_ai
-```
-
-### 4. Lanzamiento
+### 2. Environment Configuration
+Create a `.env` file in the root directory:
 ```bash
-npm run dev
+cp .env.example .env
 ```
+Fill in your `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `GEMINI_API_KEY`.
+
+### 3. Database Initialization
+1.  Navigate to your **Supabase Dashboard**.
+2.  Open the **SQL Editor**.
+3.  Paste and run the contents of [`SUPABASE_MASTER_SETUP.sql`](./SUPABASE_MASTER_SETUP.sql).
 
 ---
 
-## 📁 Estructura del Repositorio
+## 📁 Project Structure
 
 ```text
-├── src/
-│   ├── components/    # Componentes UI & Módulos (Editor, Carousel, Ads)
-│   ├── context/       # Contextos (Licencias, Auth)
-│   ├── lib/           # Utilidades (IA, PDF, Layouts, Supabase)
-│   ├── store/         # Zustand Stores (Ads, Gallery)
-│   └── pages/         # Vistas principales (Kiosko, Admin, Auth)
-├── SUPABASE_MASTER_SETUP.sql # Script maestro de DB unificado
-└── public/            # Assets estáticos y PWA logic
+src/
+├── components/    # Reusable UI components & Feature modules
+├── context/       # Auth and License providers
+├── lib/           # Core logic (AI tools, PDF engine, Supabase client)
+├── pages/         # Main view entry points (Kiosk, Admin, Login)
+├── store/         # Global state (Gallery, Ads, Config)
+└── types/         # TypeScript definitions
+public/            # Static assets & PWA configuration
 ```
 
-## 📜 Propiedad y Soporte
+---
 
-Este proyecto es propiedad intelectual de **Nexo Network Ec**. El software está diseñado para uso comercial bajo licencia.
+## 📦 Deployment
 
-- **Web**: [nexonetwork.ec](https://nexonetwork.ec)
-- **Desarrollo**: Optimizado por AI Studio Build.
+### Web Deployment (Vercel / Netlify / Cloud Run)
+1.  Connect your GitHub repository.
+2.  Set the Build Command to `npm run build`.
+3.  Set the Output Directory to `dist`.
+4.  Configure all Environment Variables from `.env.example`.
+
+### Local Kiosk Deployment
+This application is designed as a **PWA (Progressive Web App)**. For physical installation:
+1.  Deploy the web version.
+2.  Navigate to the URL in a Chromium-based browser.
+3.  Click "Install App" to run it as a standalone, chromeless application.
 
 ---
-*Transformando la impresión fotográfica con tecnología de vanguardia.*
+
+## 📜 Proprietary Information & Support
+
+**© 2024 Nexo Network Ec.** All Rights Reserved.
+This software is proprietary and intended for commercial use within authorized hardware stations.
+
+- **Developer**: [Nexo Network Ec](https://nexonetwork.ec)
+- **Optimization**: Powered by Google AI Studio.
+
+---
+*Empowering the next generation of physical printing stations.*
