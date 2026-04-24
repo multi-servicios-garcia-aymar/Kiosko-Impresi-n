@@ -51,7 +51,7 @@ const AdminPanel: React.FC = () => {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl mx-auto space-y-8"
+        className="max-w-7xl mx-auto space-y-8"
       >
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

@@ -12,6 +12,8 @@ import { Logo } from '../ui/Logo';
 import { KioskAdSidebar } from '../KioskAdSidebar';
 import { KioskAdOverlay } from '../KioskAdOverlay';
 
+import { useAdTargeting } from '../../hooks/useAdTargeting';
+
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { license, trialStatus, refreshLicense } = useLicense();
@@ -22,6 +24,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [showActivation, setShowActivation] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const adminRef = useRef<HTMLDivElement>(null);
+
+  const sidebarAds = useAdTargeting({ placement: 'sidebar' });
 
   useEffect(() => {
     LicenseService.getMachineId().then(setMachineId).catch(() => setMachineId('Error'));
@@ -283,10 +287,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </AnimatePresence>
         </main>
         
-        {/* Ad Sidebar - Only visible on XL and above */}
-        <aside className="w-80 shrink-0 hidden xl:block border-l border-slate-100 h-full bg-white">
-          <KioskAdSidebar />
-        </aside>
+        {/* Ad Sidebar - Only visible on XL and above if there are ads */}
+        {sidebarAds.length > 0 && (
+          <aside className="w-80 shrink-0 hidden xl:block border-l border-slate-100 h-full bg-white">
+            <KioskAdSidebar />
+          </aside>
+        )}
       </div>
 
       <KioskAdOverlay />

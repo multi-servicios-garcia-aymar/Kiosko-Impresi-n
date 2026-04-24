@@ -17,7 +17,7 @@ export default function Legal() {
         description="Información legal sobre el uso del Kiosko de Impresión Nexo Network Ec."
       />
       
-      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
         <button 
           onClick={() => navigate('/')}
           className="flex items-center gap-2 text-indigo-600 font-bold text-sm mb-6 hover:translate-x-[-4px] transition-transform group"

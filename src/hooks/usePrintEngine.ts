@@ -48,7 +48,9 @@ export const usePrintEngine = () => {
           setAppDimensions({ width: clientWidth, height: clientHeight });
         } else {
           setIsMobile(false);
-          const newScale = Math.min(clientWidth / 1280, clientHeight / 800);
+          // We use 1400 as a base width for better fit in wider layouts
+          const baseWidth = clientWidth > 1400 ? 1400 : 1280;
+          const newScale = Math.min(clientWidth / baseWidth, clientHeight / 800);
           setAppScale(newScale);
           setAppDimensions({
             width: clientWidth / newScale,
@@ -58,13 +60,20 @@ export const usePrintEngine = () => {
       }
     };
 
+    const resizeObserver = new ResizeObserver(() => {
+      updateAppScale();
+    });
+
+    if (wrapperRef.current) {
+      resizeObserver.observe(wrapperRef.current);
+    }
+
     window.addEventListener('resize', updateAppScale);
     updateAppScale();
-    const timeoutId = setTimeout(updateAppScale, 50);
-
+    
     return () => {
+      resizeObserver.disconnect();
       window.removeEventListener('resize', updateAppScale);
-      clearTimeout(timeoutId);
     };
   }, []);
 
