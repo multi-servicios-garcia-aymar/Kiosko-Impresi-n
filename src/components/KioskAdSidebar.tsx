@@ -12,6 +12,12 @@ export const KioskAdSidebar: React.FC = () => {
   // Filter ads based on targeting and placement
   const sidebarAds = useAdTargeting({ placement: 'sidebar' });
 
+  useEffect(() => {
+    if (currentIndex >= sidebarAds.length && sidebarAds.length > 0) {
+      setCurrentIndex(0);
+    }
+  }, [sidebarAds, currentIndex]);
+
   const activeAd = sidebarAds[currentIndex];
   const mediaItems = useMemo(() => {
     if (activeAd?.media_items && activeAd.media_items.length > 0) {
@@ -23,7 +29,7 @@ export const KioskAdSidebar: React.FC = () => {
   const activeMedia = mediaItems[activeMediaIndex];
 
   useEffect(() => {
-    if (sidebarAds.length === 0) return;
+    if (sidebarAds.length === 0 || !activeAd) return;
 
     const duration = activeMedia?.duration || activeAd?.display_duration || 8000;
     const timer = setTimeout(() => {
@@ -42,7 +48,7 @@ export const KioskAdSidebar: React.FC = () => {
     setActiveMediaIndex(0);
   }, [currentIndex]);
 
-  if (sidebarAds.length === 0) return null;
+  if (sidebarAds.length === 0 || !activeAd) return null;
 
   return (
     <div className="w-full h-full bg-slate-50 border-l border-slate-200 p-4 hidden xl:flex flex-col gap-6 sticky top-0 overflow-y-auto">

@@ -21,6 +21,12 @@ export const KioskAdCarousel: React.FC = () => {
 
   const filteredAds = useAdTargeting({ placement: 'carousel' });
 
+  useEffect(() => {
+    if (currentIndex >= filteredAds.length && filteredAds.length > 0) {
+      setCurrentIndex(0);
+    }
+  }, [filteredAds, currentIndex]);
+
   const activeAd = filteredAds[currentIndex];
   const mediaItems = useMemo(() => {
     if (activeAd?.media_items && activeAd.media_items.length > 0) {
