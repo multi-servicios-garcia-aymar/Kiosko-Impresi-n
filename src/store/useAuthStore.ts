@@ -18,14 +18,29 @@ interface AuthState {
   profile: Profile | null;
   isLoading: boolean;
   initializeAuth: () => void;
+  refetchProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
   profile: null,
   isLoading: true,
+  refetchProfile: async () => {
+    const { user } = get();
+    if (!user) return;
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (!error && profile) {
+      set({ profile });
+    }
+  },
   initializeAuth: async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -38,6 +53,23 @@ export const useAuthStore = create<AuthState>((set) => ({
           .single();
         
         if (error) {
+          // If profile doesn't exist, try to create it (fallback for existing users)
+          if (error.code === 'PGRST116') {
+             const user = (await supabase.auth.getUser()).data.user;
+             if (user) {
+               const { data: newProfile } = await supabase
+                 .from('profiles')
+                 .insert({
+                   id: user.id,
+                   email: user.email,
+                   full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+                   is_super_admin: false
+                 })
+                 .select()
+                 .single();
+               return newProfile;
+             }
+          }
           console.error("Profile fetch error:", error);
           return null;
         }

@@ -17,15 +17,24 @@ import { useAdTargeting } from '../../hooks/useAdTargeting';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { license, trialStatus, refreshLicense } = useLicense();
-  const { user, profile, signOut } = useAuthStore();
+  const { user, profile, signOut, refetchProfile } = useAuthStore();
   const { initializeCloudSync } = usePhotoStore();
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isRefetching, setIsRefetching] = useState(false);
   const [machineId, setMachineId] = useState<string>('');
   const [showActivation, setShowActivation] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const adminRef = useRef<HTMLDivElement>(null);
 
   const sidebarAds = useAdTargeting({ placement: 'sidebar' });
+
+  // Refetch profile when menu opens to catch level/role changes
+  useEffect(() => {
+    if (isAdminOpen && user) {
+      setIsRefetching(true);
+      refetchProfile().finally(() => setIsRefetching(false));
+    }
+  }, [isAdminOpen, user, refetchProfile]);
 
   useEffect(() => {
     LicenseService.getMachineId().then(setMachineId).catch(() => setMachineId('Error'));
