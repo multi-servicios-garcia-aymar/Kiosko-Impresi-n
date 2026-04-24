@@ -83,7 +83,7 @@ export const KioskAdOverlay: React.FC = () => {
                         muted={isMuted}
                         loop
                         playsInline
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                       <button
                         onClick={(e) => {
@@ -99,7 +99,7 @@ export const KioskAdOverlay: React.FC = () => {
                     <img 
                       src={activeMedia?.url || activeAd.image_url} 
                       alt={activeAd.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   )}
                 </motion.div>

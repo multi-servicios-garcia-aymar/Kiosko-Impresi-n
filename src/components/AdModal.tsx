@@ -165,7 +165,7 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
                     className="relative aspect-video rounded-3xl overflow-hidden bg-slate-100 group border border-slate-200 shadow-sm"
                   >
                     {item.type === 'image' ? (
-                      <img src={item.preview} className="w-full h-full object-cover" alt="Preview" />
+                      <img src={item.preview} className="w-full h-full object-contain" alt="Preview" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-4">
                         <Film className="w-8 h-8 mb-2 text-indigo-400" />

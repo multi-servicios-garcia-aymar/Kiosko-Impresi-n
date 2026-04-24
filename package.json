@@ -31,6 +31,7 @@
     "react-virtuoso": "^4.18.5",
     "smartcrop": "^2.0.5",
     "tailwind-merge": "^3.5.0",
+    "uuid": "^14.0.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -41,6 +42,7 @@
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.21",
     "jsdom": "^29.0.1",

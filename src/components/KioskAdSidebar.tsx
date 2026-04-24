@@ -68,7 +68,7 @@ export const KioskAdSidebar: React.FC = () => {
                   muted={isMuted}
                   loop
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
                 <button
                   onClick={() => setIsMuted(!isMuted)}
@@ -81,7 +81,7 @@ export const KioskAdSidebar: React.FC = () => {
               <img 
                 src={activeMedia?.url || activeAd.image_url} 
                 alt={activeAd.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent pointer-events-none" />
