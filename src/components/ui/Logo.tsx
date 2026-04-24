@@ -17,7 +17,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
     <div className={`flex items-center justify-center shrink-0 overflow-hidden ${sizeClasses[size]} ${className}`}>
       <img 
         src="/icon.svg"
-        alt="Kiosko de Impresión Logo" 
+        alt="Foto Estudio App Logo" 
         className="w-full h-full object-contain drop-shadow-md"
         referrerPolicy="no-referrer"
       />

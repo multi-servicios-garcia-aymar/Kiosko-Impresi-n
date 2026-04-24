@@ -79,10 +79,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <Logo size="md" className="bg-white rounded-xl shadow-md border border-slate-100 p-1" />
             <div className="flex flex-col justify-center hidden sm:flex">
               <span className="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 leading-tight">
-                Kiosko de Impresión
+                Foto Estudio App
               </span>
               <span className="text-[11px] font-medium text-slate-500 tracking-wide">
-                Desarrollado por Nexo Network Ec
+                Soluciones Digitales Inteligentes
               </span>
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <div className="flex items-center gap-1.5 opacity-50 hover:opacity-100 transition-opacity">
             <Shield className="w-3 h-3 text-indigo-500" />
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-              Nexo Security Scan Active
+              Secure Cloud Processing Active
             </span>
           </div>
           
@@ -315,7 +315,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               Privacidad y Términos
             </button>
             <span className="text-[10px] font-medium text-slate-300">
-              © {new Date().getFullYear()} NEXO NETWORK EC
+              © {new Date().getFullYear()} FOTO ESTUDIO APP
             </span>
           </div>
         </div>

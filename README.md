@@ -1,13 +1,13 @@
-# 📸 Nexo Kiosko Fotos
-> **Industrial-grade Kiosk Solution for Photography & Smart Printing.**
+# 📸 Foto Estudio App
+> **Solución Profesional para Estudios Fotográficos e Impresión Inteligente.**
 
-[![Project Status: Active](https://img.shields.io/badge/Project_Status-Active-emerald.svg)](https://github.com/nexo-network/kiosko-fotos)
-[![License: Commercial](https://img.shields.io/badge/License-Commercial-indigo.svg)](LICENSE)
+[![Project Status: Active](https://img.shields.io/badge/Project_Status-Active-emerald.svg)](https://github.com/foto-estudio/app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](LICENSE)
 [![Built with: React 19](https://img.shields.io/badge/Frontend-React_19-blue.svg)](https://react.dev/)
 [![Backend: Supabase](https://img.shields.io/badge/Backend-Supabase-emerald.svg)](https://supabase.com/)
 [![Style: Tailwind 4](https://img.shields.io/badge/Style-Tailwind_4-38b2ac.svg)](https://tailwindcss.com/)
 
-**Nexo Kiosko Fotos** is a comprehensive software suite designed for modern photo printing stations. Built for **Nexo Network Ec**, it leverages localized Edge AI for image processing while maintaining real-time cloud synchronization for management and advertising.
+**Foto Estudio App** es una plataforma integral diseñada para la gestión de estudios fotográficos y estaciones de impresión modernas. Aprovecha la IA de vanguardia para el procesamiento de imágenes directamente en el navegador, manteniendo una sincronización fluida con la nube.
 
 ---
 
@@ -108,13 +108,13 @@ This application is designed as a **PWA (Progressive Web App)**. For physical in
 
 ---
 
-## 📜 Proprietary Information & Support
+## 📜 Información de Soporte
 
-**© 2024 Nexo Network Ec.** All Rights Reserved.
-This software is proprietary and intended for commercial use within authorized hardware stations.
+**© {new Date().getFullYear()} Foto Estudio App.** Todos los derechos reservados.
+Esta plataforma está diseñada para uso comercial en estaciones de fotografía autorizadas.
 
-- **Developer**: [Nexo Network Ec](https://nexonetwork.ec)
-- **Optimization**: Powered by Google AI Studio.
+- **Desarrollador**: Foto Estudio Team
+- **Optimización**: Impulsado por Google AI Studio.
 
 ---
 *Empowering the next generation of physical printing stations.*

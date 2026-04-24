@@ -11,14 +11,14 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = 'Kiosko de Impresión Fotográfica | Nexo Network Ec',
-  description = 'Servicio profesional de impresión de fotos carnet, pasaporte y postales en Ecuador. Calidad fotográfica con precisión milimétrica.',
-  canonical = 'https://nexo-kiosk.example.com', // Replace with real domain if available
-  ogImage = 'https://picsum.photos/seed/kiosk-seo/1200/630',
+  title = 'Foto Estudio App | Centro de Impresión Profesional',
+  description = 'La solución inteligente para estudios y kioskos de fotografía. IA para corrección de imagen, eliminación de fondos y gestión integral.',
+  canonical = 'https://foto-estudio.app', // Replace with real domain if available
+  ogImage = 'https://picsum.photos/seed/foto-estudio-seo/1200/630',
   ogType = 'website',
-  keywords = 'impresion fotos, foto carnet ecuador, foto pasaporte, kiosko fotos, nexo network ec, impresion postal'
+  keywords = 'impresion fotos, foto estudio app, foto carnet, foto pasaporte, kiosko inteligente, inteligencia artificial fotos'
 }) => {
-  const siteName = 'Nexo Network Ec';
+  const siteName = 'Foto Estudio App';
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 
   return (
@@ -54,7 +54,7 @@ export const StructuredData: React.FC = () => {
   const schema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "Kiosko de Impresión Nexo",
+    "name": "Foto Estudio App",
     "operatingSystem": "Web, Windows, Android, iOS",
     "applicationCategory": "MultimediaApplication",
     "description": "Software profesional para el procesamiento e impresión de fotografía de documentos y postales.",
@@ -65,7 +65,7 @@ export const StructuredData: React.FC = () => {
     },
     "publisher": {
       "@type": "Organization",
-      "name": "Nexo Network Ec",
+      "name": "Foto Estudio Team",
       "logo": {
         "@type": "ImageObject",
         "url": "https://picsum.photos/seed/nexo-logo/200/200"

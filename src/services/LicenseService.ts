@@ -10,9 +10,9 @@ export interface LicenseData {
 }
 
 export class LicenseService {
-  private static STORAGE_KEY = 'nexo_kiosk_license';
-  private static MACHINE_ID_KEY = 'nexo_kiosk_machine_id';
-  private static TRIAL_START_KEY = 'nexo_kiosk_trial_start';
+  private static STORAGE_KEY = 'foto_estudio_license';
+  private static MACHINE_ID_KEY = 'foto_estudio_machine_id';
+  private static TRIAL_START_KEY = 'foto_estudio_trial_start';
 
   /**
    * Retrieves the unique hardware ID of the current machine (Web Fallback)
@@ -147,7 +147,7 @@ export class LicenseService {
         hardwareId: currentHardwareId,
         expiresAt: license.expires_at,
         isActive: license.is_active,
-        clientName: license.client_name || 'Cliente Nexo',
+        clientName: license.client_name || 'Cliente Premium',
       };
       
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(localData));

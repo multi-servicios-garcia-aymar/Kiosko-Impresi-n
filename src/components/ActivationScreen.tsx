@@ -72,7 +72,7 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ onActivated,
             Activación de Software
           </h2>
           <p className="text-center text-slate-500 mb-8 text-sm">
-            Ingresa tu clave de producto para desbloquear el Kiosko de Impresión. 
+            Ingresa tu clave de producto para desbloquear Foto Estudio App. 
             <span className="block mt-1 text-indigo-500 font-medium">
               La licencia se vinculará automáticamente a este equipo al activarse.
             </span>
@@ -91,7 +91,7 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ onActivated,
                   type="text"
                   id="license"
                   className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all uppercase tracking-widest font-mono text-sm placeholder:normal-case placeholder:tracking-normal"
-                  placeholder="NEXO-XXXX-XXXX-XXXX"
+                  placeholder="FEA-XXXX-XXXX-XXXX"
                   value={licenseKey}
                   onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
                   disabled={isLoading}
@@ -148,7 +148,7 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ onActivated,
               </span>
             </div>
             <p className="text-[10px] text-center mt-2 text-slate-400">
-              Desarrollado por Nexo Network Ec
+              Soluciones Digitales Inteligentes
             </p>
           </div>
         </div>

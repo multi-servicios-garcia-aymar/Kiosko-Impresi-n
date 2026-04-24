@@ -1,6 +1,6 @@
 {
-  "name": "Nexo Kiosko Fotos",
-  "description": "Nexo Network Ec presents: La solución definitiva para kioskos de impresión fotográfica. Procesamiento con IA, eliminación de fondos, SmartCrop, publicidad interactiva y gestión centralizada vía Supabase.",
+  "name": "Foto Estudio App",
+  "description": "La solución inteligente para estudios y kioskos de fotografía. IA para corrección de imagen, eliminación de fondos, SmartCrop y gestión integral con Supabase para una experiencia profesional en móvil y escritorio.",
   "requestFramePermissions": [
     "camera"
   ]

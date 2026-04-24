@@ -116,7 +116,7 @@ export const KioskAdOverlay: React.FC = () => {
               </button>
 
               <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 bg-indigo-600 rounded-full text-white text-[10px] font-black uppercase tracking-widest z-30 shadow-2xl">
-                <Megaphone className="w-3 h-3" /> Promoción Nexo
+                <Megaphone className="w-3 h-3" /> Promoción Exclusiva
               </div>
 
               <div className="absolute bottom-10 left-8 right-8 text-left z-30">

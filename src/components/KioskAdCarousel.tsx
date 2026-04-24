@@ -134,7 +134,7 @@ export const KioskAdCarousel: React.FC = () => {
             <div className="flex-1 text-left">
               <div className="flex items-center gap-2 mb-3">
                 <div className="px-2 py-0.5 bg-indigo-600 rounded text-[9px] font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-500/20">
-                  Publicidad Nexo
+                  Publicidad Premium
                 </div>
                 <div className="h-px w-8 bg-white/20" />
               </div>

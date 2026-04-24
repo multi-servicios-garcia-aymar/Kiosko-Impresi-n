@@ -1,7 +1,7 @@
 {
-  "name": "Nexo Kiosko Fotos",
-  "short_name": "KioskoFotos",
-  "description": "Centro de Impresión Fotográfica Profesional - Nexo Network Ec",
+  "name": "Foto Estudio App",
+  "short_name": "FotoEstudio",
+  "description": "Centro de Impresión Fotográfica Profesional con IA e Impresión Milimétrica",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",
