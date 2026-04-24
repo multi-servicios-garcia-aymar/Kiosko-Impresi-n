@@ -59,7 +59,7 @@ export const KioskAdSidebar: React.FC = () => {
           exit={{ opacity: 0, scale: 1.05 }}
           className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden group flex flex-col"
         >
-          <div className="aspect-[3/4] relative overflow-hidden bg-slate-900">
+          <div className="aspect-[3/4] relative overflow-hidden">
             {activeMedia?.type === 'video' ? (
               <div className="w-full h-full relative">
                 <video
@@ -84,7 +84,7 @@ export const KioskAdSidebar: React.FC = () => {
                 className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent pointer-events-none" />
+            {/* Gradient removed for floating effect */}
           </div>
           
           <div className="p-5 flex flex-col gap-3">

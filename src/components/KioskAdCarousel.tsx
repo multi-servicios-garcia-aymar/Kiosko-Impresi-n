@@ -83,7 +83,7 @@ export const KioskAdCarousel: React.FC = () => {
   const variants = getVariants(activeAd?.display_mode || 'fade');
 
   return (
-    <div className="w-full h-48 md:h-64 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-100/50 mb-12 relative bg-slate-100 group">
+    <div className="w-full h-48 md:h-64 rounded-3xl overflow-hidden mb-12 relative bg-transparent group">
       <AnimatePresence mode="wait">
         <motion.div
           key={`${activeAd?.id}-${activeMediaIndex}`}
@@ -122,8 +122,8 @@ export const KioskAdCarousel: React.FC = () => {
             />
           )}
           
-          <div className="absolute inset-0 -z-10 bg-slate-900/5 backdrop-blur-3xl" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-900/90 via-slate-900/60 to-transparent flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="absolute inset-0 -z-10 bg-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-900/20 via-transparent to-transparent flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex-1 text-left">
               <h3 className="text-white font-bold text-lg md:text-2xl drop-shadow-md mb-1">
                 {activeAd?.title}
