@@ -24,14 +24,30 @@ const AdminPanel: React.FC = () => {
   const { stats, isLoading: isLoadingStats, refetch: refetchStats } = useAdminStats();
   const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'security' | 'ads' | 'settings'>('overview');
   const [showAdModal, setShowAdModal] = useState(false);
+  const [editingAd, setEditingAd] = useState<KioskAd | undefined>(undefined);
 
   useEffect(() => {
     fetchAds();
   }, [fetchAds]);
 
-  const handleCreateAd = async (adData: Partial<KioskAd>) => {
-    await createAd(adData);
+  const handleSaveAd = async (adData: Partial<KioskAd>) => {
+    if (editingAd) {
+      await updateAd(editingAd.id, adData);
+    } else {
+      await createAd(adData);
+    }
     setShowAdModal(false);
+    setEditingAd(undefined);
+  };
+
+  const handleNewAd = () => {
+    setEditingAd(undefined);
+    setShowAdModal(true);
+  };
+
+  const handleEditAd = (ad: KioskAd) => {
+    setEditingAd(ad);
+    setShowAdModal(true);
   };
 
   if (isAuthLoading) return null;
@@ -105,7 +121,8 @@ const AdminPanel: React.FC = () => {
               <AdminAds 
                 ads={ads} 
                 isLoading={isLoadingAds} 
-                onNewAd={() => setShowAdModal(true)}
+                onNewAd={handleNewAd}
+                onEditAd={handleEditAd}
                 onUpdateAd={updateAd}
                 onDeleteAd={deleteAd}
               />
@@ -119,15 +136,19 @@ const AdminPanel: React.FC = () => {
           </motion.div>
         </AnimatePresence>
       </motion.div>
-
-      <AnimatePresence>
-        {showAdModal && (
-          <AdModal 
-            onClose={() => setShowAdModal(false)} 
-            onSave={handleCreateAd} 
-          />
-        )}
-      </AnimatePresence>
+ 
+       <AnimatePresence>
+         {showAdModal && (
+           <AdModal 
+             onClose={() => {
+               setShowAdModal(false);
+               setEditingAd(undefined);
+             }} 
+             onSave={handleSaveAd} 
+             ad={editingAd}
+           />
+         )}
+       </AnimatePresence>
     </div>
   );
 };

@@ -128,14 +128,23 @@ export const KioskAdCarousel: React.FC = () => {
             />
           )}
           
-          <div className="absolute inset-0 -z-10 bg-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-900/20 via-transparent to-transparent flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none opacity-80" />
+          
+          <div className="absolute bottom-0 left-0 right-0 p-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex-1 text-left">
-              <h3 className="text-white font-bold text-lg md:text-2xl drop-shadow-md mb-1">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="px-2 py-0.5 bg-indigo-600 rounded text-[9px] font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-500/20">
+                  Publicidad Nexo
+                </div>
+                <div className="h-px w-8 bg-white/20" />
+              </div>
+              
+              <h3 className="text-white font-black text-2xl md:text-4xl tracking-tight leading-[1.1] mb-2 drop-shadow-2xl">
                 {activeAd?.title}
               </h3>
+              
               {activeAd?.description && (
-                <p className="text-slate-200 text-sm md:text-base line-clamp-2 max-w-xl">
+                <p className="text-white/70 text-sm md:text-base font-medium line-clamp-2 max-w-2xl drop-shadow-md">
                   {activeAd.description}
                 </p>
               )}
@@ -143,12 +152,12 @@ export const KioskAdCarousel: React.FC = () => {
             
             {activeAd?.cta_text && activeAd?.cta_url && (
               <motion.a
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 href={activeAd.cta_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm md:text-base shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 whitespace-nowrap hover:bg-indigo-700 transition-colors"
+                className="px-8 py-4 bg-white text-indigo-600 rounded-2xl font-black text-sm shadow-2xl hover:bg-indigo-50 transition-all border border-white/50 flex items-center gap-2"
               >
                 {activeAd.cta_text}
                 <ExternalLink className="w-4 h-4" />

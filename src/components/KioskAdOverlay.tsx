@@ -106,7 +106,7 @@ export const KioskAdOverlay: React.FC = () => {
                 </motion.div>
               </AnimatePresence>
 
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/10 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none z-20" />
               
               <button 
                 onClick={() => setActiveAd(null)}
@@ -115,16 +115,16 @@ export const KioskAdOverlay: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 bg-indigo-600/90 backdrop-blur-sm rounded-full text-white text-[10px] font-bold uppercase tracking-wider z-30">
-                <Megaphone className="w-3 h-3" /> Exclusivo
+              <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 bg-indigo-600 rounded-full text-white text-[10px] font-black uppercase tracking-widest z-30 shadow-2xl">
+                <Megaphone className="w-3 h-3" /> Promoción Nexo
               </div>
 
               <div className="absolute bottom-10 left-8 right-8 text-left z-30">
-                <h3 className="text-2xl font-black text-white mb-2 leading-none drop-shadow-lg uppercase">
+                <h3 className="text-4xl font-black text-white mb-2 leading-[0.85] drop-shadow-2xl uppercase tracking-tighter">
                   {activeAd.title}
                 </h3>
                 {activeAd.description && (
-                  <p className="text-slate-200 text-xs font-medium line-clamp-2 mb-6 drop-shadow-md">
+                  <p className="text-white/90 text-sm font-semibold mb-6 line-clamp-3 drop-shadow-lg max-w-md">
                     {activeAd.description}
                   </p>
                 )}
@@ -134,7 +134,7 @@ export const KioskAdOverlay: React.FC = () => {
                     href={activeAd.cta_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-600 rounded-2xl font-bold text-sm shadow-xl hover:bg-slate-50 transition-all hover:scale-105"
+                    className="inline-flex items-center gap-2 px-10 py-5 bg-white text-indigo-600 rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-2xl"
                   >
                     {activeAd.cta_text}
                     <ExternalLink className="w-4 h-4" />

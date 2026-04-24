@@ -7,29 +7,39 @@ import { KioskAd, AdMediaItem } from '../store/useAdStore';
 interface AdModalProps {
   onClose: () => void;
   onSave: (ad: Partial<KioskAd>) => Promise<void>;
+  ad?: KioskAd;
 }
 
 interface PendingMediaItem {
   id: string;
-  file: File;
+  file?: File;
+  url?: string;
   preview: string;
   type: 'image' | 'video';
   duration: number;
 }
 
-export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [ctaText, setCtaText] = useState('');
-  const [ctaUrl, setCtaUrl] = useState('');
-  const [globalDuration, setGlobalDuration] = useState(5000);
-  const [targetId, setTargetId] = useState('');
-  const [targetAudience, setTargetAudience] = useState<'all' | 'registered' | 'anonymous' | 'trial'>('all');
-  const [placement, setPlacement] = useState<'carousel' | 'sidebar' | 'overlay'>('carousel');
-  const [displayMode, setDisplayMode] = useState<'fade' | 'slide' | 'zoom'>('fade');
-  const [priority, setPriority] = useState(0);
+export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave, ad }) => {
+  const [title, setTitle] = useState(ad?.title || '');
+  const [description, setDescription] = useState(ad?.description || '');
+  const [ctaText, setCtaText] = useState(ad?.cta_text || '');
+  const [ctaUrl, setCtaUrl] = useState(ad?.cta_url || '');
+  const [globalDuration, setGlobalDuration] = useState(ad?.display_duration || 5000);
+  const [targetId, setTargetId] = useState(ad?.target_machine_id || '');
+  const [targetAudience, setTargetAudience] = useState<'all' | 'registered' | 'anonymous' | 'trial'>(ad?.target_audience || 'all');
+  const [placement, setPlacement] = useState<'carousel' | 'sidebar' | 'overlay'>(ad?.placement || 'carousel');
+  const [displayMode, setDisplayMode] = useState<'fade' | 'slide' | 'zoom'>(ad?.display_mode || 'fade');
+  const [priority, setPriority] = useState(ad?.priority || 0);
   
-  const [mediaItems, setMediaItems] = useState<PendingMediaItem[]>([]);
+  const [mediaItems, setMediaItems] = useState<PendingMediaItem[]>(
+    ad?.media_items?.map(m => ({
+      id: Math.random().toString(36).substr(2, 9),
+      url: m.url,
+      preview: m.url,
+      type: m.type,
+      duration: m.duration || 5000
+    })) || []
+  );
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,39 +87,49 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
 
     setIsUploading(true);
     try {
-      const uploadedMedia: AdMediaItem[] = [];
+      const finalMedia: AdMediaItem[] = [];
 
       for (const item of mediaItems) {
-        const fileExt = item.file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `ad_${fileName}`;
+        if (item.url && !item.file) {
+          // Already uploaded item
+          finalMedia.push({
+            url: item.url,
+            type: item.type,
+            duration: item.duration
+          });
+        } else if (item.file) {
+          // New file to upload
+          const fileExt = item.file.name.split('.').pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `ad_${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('ads')
-          .upload(filePath, item.file);
+          const { error: uploadError } = await supabase.storage
+            .from('ads')
+            .upload(filePath, item.file);
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('ads')
-          .getPublicUrl(filePath);
+          const { data: { publicUrl } } = supabase.storage
+            .from('ads')
+            .getPublicUrl(filePath);
 
-        uploadedMedia.push({
-          url: publicUrl,
-          type: item.type,
-          duration: item.duration
-        });
+          finalMedia.push({
+            url: publicUrl,
+            type: item.type,
+            duration: item.duration
+          });
+        }
       }
 
       await onSave({
         title,
         description: description || undefined,
-        image_url: uploadedMedia[0].url, // Use first as thumbnail
-        media_items: uploadedMedia,
+        image_url: finalMedia[0].url,
+        media_items: finalMedia,
         cta_text: ctaText || undefined,
         cta_url: ctaUrl || undefined,
-        is_active: true,
-        display_duration: uploadedMedia.reduce((acc, curr) => acc + (curr.duration || 0), 0),
+        is_active: ad ? ad.is_active : true, // Keep it if ad exists
+        display_duration: finalMedia.reduce((acc, curr) => acc + (curr.duration || 0), 0),
         target_machine_id: targetId || null,
         target_audience: targetAudience,
         placement,
@@ -119,8 +139,8 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
       
       onClose();
     } catch (err) {
-      console.error('Error in ad creation:', err);
-      alert('Hubo un error al crear el anuncio.');
+      console.error('Error in ad operation:', err);
+      alert('Hubo un error al procesar el anuncio.');
     } finally {
       setIsUploading(false);
     }
@@ -145,8 +165,8 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
               <Megaphone className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900">Nuevo Anuncio Multimedia</h3>
-              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Creador de Campañas</p>
+              <h3 className="font-bold text-slate-900">{ad ? 'Editar Anuncio' : 'Nuevo Anuncio Multimedia'}</h3>
+              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">{ad ? 'Actualizar Campaña' : 'Creador de Campañas'}</p>
             </div>
           </div>
           <button 
@@ -401,7 +421,7 @@ export const AdModal: React.FC<AdModalProps> = ({ onClose, onSave }) => {
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                Lanzar Campaña
+                {ad ? 'Guardar Cambios' : 'Lanzar Campaña'}
               </>
             )}
           </button>

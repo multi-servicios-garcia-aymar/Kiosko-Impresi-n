@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Megaphone, Plus, Trash, Globe, MapPin, Clock, Layout, Users, Zap, Layers, Play, Info, X, FileText, AlignLeft } from 'lucide-react';
+import { Megaphone, Plus, Trash, Globe, MapPin, Clock, Layout, Users, Zap, Layers, Play, Info, X, FileText, AlignLeft, Edit } from 'lucide-react';
 import { KioskAd } from '../../store/useAdStore';
 import { toast } from 'react-hot-toast';
 import { logger } from '../../services/LoggerService';
@@ -9,11 +9,12 @@ interface AdminAdsProps {
   ads: KioskAd[];
   isLoading: boolean;
   onNewAd: () => void;
+  onEditAd: (ad: KioskAd) => void;
   onUpdateAd: (id: string, updates: Partial<KioskAd>) => void;
   onDeleteAd: (id: string) => void;
 }
 
-export const AdminAds: React.FC<AdminAdsProps> = ({ ads, isLoading, onNewAd, onUpdateAd, onDeleteAd }) => {
+export const AdminAds: React.FC<AdminAdsProps> = ({ ads, isLoading, onNewAd, onEditAd, onUpdateAd, onDeleteAd }) => {
   const [showSpecs, setShowSpecs] = useState(false);
   const handleToggleActive = async (ad: KioskAd) => {
     try {
@@ -228,6 +229,13 @@ export const AdminAds: React.FC<AdminAdsProps> = ({ ads, isLoading, onNewAd, onU
                     }`}
                   >
                     {ad.is_active ? 'Desactivar' : 'Activar'}
+                  </button>
+                  <button 
+                    onClick={() => onEditAd(ad)}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-indigo-600 transition-colors"
+                    title="Editar Anuncio"
+                  >
+                    <Edit className="w-4 h-4" /> 
                   </button>
                   <button 
                     onClick={() => handleDelete(ad)}

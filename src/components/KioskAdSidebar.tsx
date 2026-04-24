@@ -95,19 +95,26 @@ export const KioskAdSidebar: React.FC = () => {
           </div>
           
           <div className="p-5 flex flex-col gap-3">
-            <h5 className="font-bold text-slate-800 text-sm">{activeAd.title}</h5>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded text-[8px] font-black uppercase tracking-wider">
+                Nexo Promo
+              </span>
+            </div>
+            <h5 className="font-black text-indigo-600 text-lg leading-tight group-hover:text-indigo-500 transition-colors uppercase tracking-tighter">
+              {activeAd.title}
+            </h5>
             {activeAd.description && (
-              <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+              <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed font-medium">
                 {activeAd.description}
               </p>
             )}
             
-            {activeAd.cta_text && (
+            {activeAd.cta_text && activeAd.cta_url && (
               <a
                 href={activeAd.cta_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                className="mt-2 w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-slate-200 hover:bg-indigo-600 transition-all hover:scale-[1.02] active:scale-95"
               >
                 {activeAd.cta_text}
                 <ExternalLink className="w-3 h-3" />
