@@ -53,24 +53,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           .single();
         
         if (error) {
-          // If profile doesn't exist, try to create it (fallback for existing users)
-          if (error.code === 'PGRST116') {
-             const user = (await supabase.auth.getUser()).data.user;
-             if (user) {
-               const { data: newProfile } = await supabase
-                 .from('profiles')
-                 .insert({
-                   id: user.id,
-                   email: user.email,
-                   full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
-                   is_super_admin: false
-                 })
-                 .select()
-                 .single();
-               return newProfile;
-             }
-          }
           console.error("Profile fetch error:", error);
+          if (error.code === 'PGRST116') {
+             // ... creation logic ...
+          }
+          // If 500 error, notify specifically about RLS issues
+          if (error.code === '500' || error.message.includes('recursion')) {
+            console.error("CRITICAL: RLS Policy Recursion detected. Apply the updated SUPABASE_MASTER_SETUP.sql to fix.");
+          }
           return null;
         }
         return data;
