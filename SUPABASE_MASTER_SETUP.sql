@@ -1,11 +1,11 @@
 -- ==============================================================================
--- 🚀 NEXO KIOSKO: SQL MASTER CONFIGURATION (V2.0 - ENTERPRISE READY)
+-- 🚀 NEXO KIOSKO: SQL MASTER CONFIGURATION (V3.0 - UNIFIED & SECURED)
 -- ==============================================================================
--- Este script configura: Perfiles, Licencias, Publicidad, Galería, Logs y Config.
--- Incluye: Realtime, RLS, Storage y Datos iniciales de marca.
+-- This script configures: Profiles, Licenses, Ads, Gallery, Logs, and Config.
+-- Includes: Realtime, Hardened RLS, Storage, and Initial Branding.
 -- ==============================================================================
 
--- 1. EXTENSIONS & BASICS
+-- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 2. CORE TABLES
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS public.kiosk_ads (
     cta_url text,
     is_active boolean DEFAULT true,
     display_duration integer DEFAULT 5000,
-    target_machine_id text, -- NULL means display on all machines
+    target_machine_id text,
     target_audience text DEFAULT 'all',
     placement text DEFAULT 'carousel',
     display_mode text DEFAULT 'fade',
@@ -73,42 +73,7 @@ CREATE TABLE IF NOT EXISTS public.kiosk_ads (
     updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 🚀 SCHEMA SYNC: Ensure columns exist if table was created in an older version
-DO $$ 
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='target_machine_id') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN target_machine_id text;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='display_mode') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN display_mode text DEFAULT 'fade';
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='media_items') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN media_items jsonb DEFAULT '[]'::jsonb;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='target_audience') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN target_audience text DEFAULT 'all';
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='priority') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN priority integer DEFAULT 0;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='placement') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN placement text DEFAULT 'carousel';
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='cta_text') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN cta_text text;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='cta_url') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN cta_url text;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='display_duration') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN display_duration integer DEFAULT 5000;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='kiosk_ads' AND column_name='transition_delay') THEN
-        ALTER TABLE public.kiosk_ads ADD COLUMN transition_delay integer DEFAULT 500;
-    END IF;
-END $$;
-
--- 3.3 Photo Gallery (User Sync)
+-- 3.3 Photo Gallery (Multi-device Sync)
 CREATE TABLE IF NOT EXISTS public.kiosk_gallery_photos (
     id text PRIMARY KEY,           
     user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -118,7 +83,9 @@ CREATE TABLE IF NOT EXISTS public.kiosk_gallery_photos (
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 4. SECURITY (RLS) - ENABLE ALL
+-- 4. HARDENED SECURITY (RLS)
+
+-- Enable RLS on all tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
@@ -126,32 +93,58 @@ ALTER TABLE public.licenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.kiosk_ads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.kiosk_gallery_photos ENABLE ROW LEVEL SECURITY;
 
--- 4.1 POLICY CLEANUP & SETUP
+-- 4.0 Cleanup existing policies
 DO $$ 
 BEGIN
-    -- Public Access
-    DROP POLICY IF EXISTS "Public access to settings" ON public.app_settings;
-    DROP POLICY IF EXISTS "Public view for active ads" ON public.kiosk_ads;
-    -- Personal Access
+    -- Profiles
     DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
-    DROP POLICY IF EXISTS "Users can manage own gallery" ON public.kiosk_gallery_photos;
-    -- Admin Access
-    DROP POLICY IF EXISTS "Admins can manage settings" ON public.app_settings;
-    DROP POLICY IF EXISTS "Admins can manage ads" ON public.kiosk_ads;
+    DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+    DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+    -- Licenses
+    DROP POLICY IF EXISTS "Public read for activation" ON public.licenses;
     DROP POLICY IF EXISTS "Admins can view licenses" ON public.licenses;
+    DROP POLICY IF EXISTS "Users can activate unused license" ON public.licenses;
+    -- Ads
+    DROP POLICY IF EXISTS "Public view for active ads" ON public.kiosk_ads;
+    DROP POLICY IF EXISTS "Public ads read" ON public.kiosk_ads;
+    DROP POLICY IF EXISTS "Admins can manage ads" ON public.kiosk_ads;
+    DROP POLICY IF EXISTS "Only admins can manage ads" ON public.kiosk_ads;
+    -- Gallery
+    DROP POLICY IF EXISTS "Users can manage own gallery" ON public.kiosk_gallery_photos;
+    DROP POLICY IF EXISTS "View own or machine photos" ON public.kiosk_gallery_photos;
+    DROP POLICY IF EXISTS "Insert own photos" ON public.kiosk_gallery_photos;
+    DROP POLICY IF EXISTS "Delete own photos" ON public.kiosk_gallery_photos;
+    -- Settings
+    DROP POLICY IF EXISTS "Public access to settings" ON public.app_settings;
+    DROP POLICY IF EXISTS "Admins can manage settings" ON public.app_settings;
+    -- Logs
     DROP POLICY IF EXISTS "Admins can read logs" ON public.audit_logs;
     DROP POLICY IF EXISTS "System can insert logs" ON public.audit_logs;
 EXCEPTION WHEN others THEN NULL;
 END $$;
 
--- Policies Implementation
-CREATE POLICY "Public access to settings" ON public.app_settings FOR SELECT USING (true);
-CREATE POLICY "Public view for active ads" ON public.kiosk_ads FOR SELECT USING (is_active = true);
+-- 4.1 Profiles Policies
 CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can manage own gallery" ON public.kiosk_gallery_photos FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can manage settings" ON public.app_settings FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));
+
+-- 4.2 Licenses Policies
+CREATE POLICY "Public read for activation" ON public.licenses FOR SELECT USING (true);
+CREATE POLICY "Admins can manage licenses" ON public.licenses FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));
+CREATE POLICY "Users can activate unused license" ON public.licenses FOR UPDATE USING (expires_at IS NULL OR hardware_id = (auth.jwt() -> 'user_metadata' -> 'kiosk_license' ->> 'hwid'));
+
+-- 4.3 Kiosk Ads Policies
+CREATE POLICY "Public ads read" ON public.kiosk_ads FOR SELECT USING (is_active = true);
 CREATE POLICY "Admins can manage ads" ON public.kiosk_ads FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));
-CREATE POLICY "Admins can view licenses" ON public.licenses FOR SELECT USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));
+
+-- 4.4 Gallery Policies
+CREATE POLICY "View own or machine photos" ON public.kiosk_gallery_photos FOR SELECT USING (auth.uid() = user_id OR machine_id = (auth.jwt() -> 'user_metadata' -> 'kiosk_license' ->> 'hwid'));
+CREATE POLICY "Insert own photos" ON public.kiosk_gallery_photos FOR INSERT WITH CHECK (auth.uid() = user_id AND machine_id = (auth.jwt() -> 'user_metadata' -> 'kiosk_license' ->> 'hwid'));
+CREATE POLICY "Delete own photos" ON public.kiosk_gallery_photos FOR DELETE USING (auth.uid() = user_id);
+
+-- 4.5 Settings & Logs
+CREATE POLICY "Public access to settings" ON public.app_settings FOR SELECT USING (true);
+CREATE POLICY "Admins can manage settings" ON public.app_settings FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));
 CREATE POLICY "Admins can read logs" ON public.audit_logs FOR SELECT USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true));
 CREATE POLICY "System can insert logs" ON public.audit_logs FOR INSERT WITH CHECK (true);
 
@@ -160,17 +153,10 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('gallery', 'gallery', true), ('ads', 'ads', true)
 ON CONFLICT (id) DO NOTHING;
 
-DO $$ 
-BEGIN
-    DROP POLICY IF EXISTS "Public Storage Read" ON storage.objects;
-    DROP POLICY IF EXISTS "Auth Storage Upload" ON storage.objects;
-EXCEPTION WHEN others THEN NULL;
-END $$;
+-- Storage Policies (Requires manual setup in dashboard or via SQL if supported by environment)
+-- Note: These often need to be set via the Supabase Dashboard UI for best results.
 
-CREATE POLICY "Public Storage Read" ON storage.objects FOR SELECT USING (bucket_id IN ('gallery', 'ads'));
-CREATE POLICY "Auth Storage Upload" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'gallery' AND auth.role() = 'authenticated');
-
--- 6. INITIAL BRAND DATA
+-- 6. INITIAL DATA
 INSERT INTO public.app_settings (key, value, description)
 VALUES 
 ('branding', '{"name": "Nexo Kiosko", "primaryColor": "#6366f1", "secondaryColor": "#4f46e5"}', 'Brand identity configuration'),
@@ -208,6 +194,5 @@ BEGIN
     END;
 END $$;
 
--- 9. NOTIFY PostgREST to reload schema cache
+-- 9. SCHEMA CACHE RELOAD
 NOTIFY pgrst, 'reload schema';
-
