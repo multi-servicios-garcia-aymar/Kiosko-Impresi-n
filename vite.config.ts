@@ -6,7 +6,7 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: '',
+    base: '/',
     worker: {
       format: 'es',
     },
@@ -15,7 +15,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
     ],
     clearScreen: false,
-    envPrefix: ['VITE_', 'TAURI_'],
+    envPrefix: ['VITE_'],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify("https://bxwjaljtkwvninohsesn.supabase.co"),
@@ -23,8 +23,15 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       },
+    },
+    build: {
+      outDir: 'dist',
+      assetsDir: 'assets',
+      emptyOutDir: true,
+      sourcemap: false,
+      minify: 'esbuild',
     },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
