@@ -32,7 +32,7 @@ export const LicenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         try {
           const decoded = JSON.parse(atob(syncParam));
           if (decoded.key && decoded.hwid) {
-            localStorage.setItem('nexo_kiosk_machine_id', decoded.hwid);
+            localStorage.setItem(LicenseService.MACHINE_ID_KEY, decoded.hwid);
             await LicenseService.activateLicense(decoded.key);
             syncAttempted = true;
             window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
@@ -49,7 +49,7 @@ export const LicenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (!localCheck.isValid) {
           const { key, hwid } = user.user_metadata.kiosk_license;
           if (key && hwid) {
-            localStorage.setItem('nexo_kiosk_machine_id', hwid);
+            localStorage.setItem(LicenseService.MACHINE_ID_KEY, hwid);
             await LicenseService.activateLicense(key);
             syncAttempted = true;
           }

@@ -125,8 +125,9 @@ CREATE POLICY "Admin manage settings" ON public.app_settings FOR ALL USING (publ
 CREATE POLICY "Admin read logs" ON public.audit_logs FOR SELECT USING (public.is_admin());
 CREATE POLICY "Public insert logs" ON public.audit_logs FOR INSERT WITH CHECK (true);
 
--- Licenses: Public read (for validation), Admin manage
+-- Licenses: Public read (for validation), Admin manage, and Self-activation
 CREATE POLICY "Public read licenses" ON public.licenses FOR SELECT USING (true);
+CREATE POLICY "Public activate licenses" ON public.licenses FOR UPDATE USING (expires_at IS NULL OR hardware_id IS NULL) WITH CHECK (true);
 CREATE POLICY "Admin manage licenses" ON public.licenses FOR ALL USING (public.is_admin());
 
 -- Ads: Public read (active), Admin manage

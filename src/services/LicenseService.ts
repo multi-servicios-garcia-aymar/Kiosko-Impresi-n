@@ -10,9 +10,9 @@ export interface LicenseData {
 }
 
 export class LicenseService {
-  private static STORAGE_KEY = 'foto_estudio_license';
-  private static MACHINE_ID_KEY = 'foto_estudio_machine_id';
-  private static TRIAL_START_KEY = 'foto_estudio_trial_start';
+  public static STORAGE_KEY = 'nexo_kiosk_license';
+  public static MACHINE_ID_KEY = 'nexo_kiosk_machine_id';
+  public static TRIAL_START_KEY = 'nexo_kiosk_trial_start';
 
   /**
    * Retrieves the unique hardware ID of the current machine (Web Fallback)
